@@ -1,9 +1,11 @@
+// THIS IS THE BETTER VERSION FOR YOUR SYSTEM
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 const generateToken = (user) => {
-  return jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE,
+  return jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
+    expiresIn: '30d'
   });
 };
 
@@ -21,9 +23,11 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
-    if (!user || !(await user.comparePassword(password))) {
+    
+    if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ msg: 'Invalid credentials' });
     }
+    
     res.json({ token: generateToken(user) });
   } catch (err) {
     res.status(500).json({ msg: err.message });
