@@ -1,28 +1,41 @@
 const jwt = require("jsonwebtoken");
-const secretKey = process.env.SECRET_KEY
+const User = require("../models/User");
+const asyncHandler = require("express-async-handler");
 
-module.exports = function authenticationMiddleware(req, res, next) {
-  const cookie = req.cookies;// if not working then last option req.headers.cookie then extract token
-  console.log('inside auth middleware')
-  // console.log(cookie);
+const protect = asyncHandler(async (req, res, next) => {
+  let token;
 
-  if (!cookie) {
-    return res.status(401).json({ message: "No Cookie provided" });
+  // 1. Check for token in cookies
+  if (req.cookies?.token) {
+    token = req.cookies.token;
   }
-  const token = cookie.token;
+  // 2. Check for Bearer token in authorization header
+  else if (req.headers?.authorization?.startsWith("Bearer")) {
+    token = req.headers.authorization.split(" ")[1];
+  }
+
   if (!token) {
-    return res.status(405).json({ message: "No token provided" });
+    res.status(401);
+    throw new Error("Not authorized, no token provided");
   }
 
-  jwt.verify(token, secretKey, (error, decoded) => {
-    if (error) {
-      return res.status(403).json({ message: "Invalid token" });
+  try {
+    // 3. Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // 4. Get user from database and attach to request
+    req.user = await User.findById(decoded.id).select("-password");
+
+    if (!req.user) {
+      res.status(401);
+      throw new Error("Not authorized, user not found");
     }
 
-    // Attach the decoded user ID to the request object for further use
-    //console.log(decoded.user)
-    
-    req.user = decoded.user;
     next();
-  });
-};
+  } catch (error) {
+    res.status(401);
+    throw new Error("Not authorized, token failed");
+  }
+});
+
+module.exports = { protect };

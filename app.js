@@ -1,31 +1,41 @@
-const mongoose = require('mongoose');
-const express = require('express');
-const dotenv = require('dotenv');
+const mongoose = require("mongoose");
+const express = require("express");
+const cookieParser = require("cookie-parser");
+const cors = require("cors");
 
-// Replace <your-database-url> with your actual MongoDB connection string
-const dbUrl = 'mongodb://localhost:27017/online-event-ticketing-system';
-const authRoutes = require('./Routes/auth');
-const userRoutes = require('./Routes/userRoutes');
-const eventRoutes = require('./Routes/eventRoutes');
-const bookingRoutes = require('./Routes/bookingRoutes');
-dotenv.config();
+// Routes
+const authRoutes = require("./Routes/auth");
+const userRoutes = require("./Routes/userRoutes");
+const eventRoutes = require("./Routes/eventRoutes");
+const bookingRoutes = require("./Routes/bookingRoutes");
 
+// Middleware
+const { errorHandler } = require("./Middleware/errorMiddleware");
+
+// App configuration
 const app = express();
 
+//Database Connection (using direct URL)
 
-app.use(express.json());
+// Hardcoded JWT secret (for development only - not for production)
+process.env.JWT_SECRET = "your-development-secret-key-12345";
+process.env.JWT_EXPIRE = "30d";
 
-app.use('/api/v1', authRoutes);
-app.use('/api/v1/users', userRoutes);
-app.use('/api/v1/events', eventRoutes);
-app.use('/api/v1/bookings', bookingRoutes);
+// Routes
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/events", eventRoutes);
+app.use("/api/v1/bookings", bookingRoutes);
+
+// Handle 404
+// app.use("*", (req, res) => {
+//   res.status(404).json({
+//     success: false,
+//     message: "Endpoint not found",
+//   });
+// });
+
+// Error Handling Middleware (should be last)
+app.use(errorHandler);
 
 module.exports = app;
-
-
-mongoose.connect(dbUrl, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('Connected to MongoDB'))
-.catch((err) => console.error('MongoDB connection error:', err));
