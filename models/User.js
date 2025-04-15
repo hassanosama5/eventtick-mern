@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 // Define the User Schema
 const userSchema = new mongoose.Schema({
@@ -9,7 +10,9 @@ const userSchema = new mongoose.Schema({
   email: { 
     type: String, 
     required: true, 
-    unique: true 
+    unique: true,
+    lowercase: true,
+    trim: true
   },
   profilePicture: { 
     type: String, 
@@ -17,14 +20,19 @@ const userSchema = new mongoose.Schema({
   },
   password: { 
     type: String, 
-    required: true 
+    required: true
   },
   role: { 
     type: String, 
     enum: ['standard', 'organizer', 'admin'], 
     default: 'standard' 
-  },
+  }
 }, { timestamps: true });
+
+// Method to check password
+userSchema.methods.matchPassword = async function(enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
 
 // Create the User model
 const User = mongoose.model('User', userSchema);

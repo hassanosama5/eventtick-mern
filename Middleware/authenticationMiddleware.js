@@ -25,4 +25,4 @@ module.exports = function authenticationMiddleware(req, res, next) {
     req.user = decoded.user;
     next();
   });
-};
+}; 

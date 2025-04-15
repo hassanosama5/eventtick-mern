@@ -3,7 +3,7 @@ const {
   getProfile, updateProfile, getAllUsers, getUserById,
   updateUserRole, deleteUser, getUserBookings, getOrganizerEvents, getEventAnalytics
 } = require('../controllers/userController');
-const { protect, authorize } = require('../middlewares/authMiddleware');
+const { protect, authorize } = require('../Middleware/authorizationMiddleware');
 
 router.use(protect);
 
