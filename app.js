@@ -3,6 +3,8 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 
+const app = express();
+
 // Routes
 const authRoutes = require("./Routes/auth");
 const userRoutes = require("./Routes/userRoutes");
@@ -13,7 +15,6 @@ const bookingRoutes = require("./Routes/bookingRoutes");
 const { errorHandler } = require("./Middleware/errorMiddleware");
 
 // App configuration
-const app = express();
 
 //Database Connection (using direct URL)
 
