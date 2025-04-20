@@ -9,7 +9,7 @@ const { protect, authorize } = require('../Middleware/authorizationMiddleware');
 router.use(protect);
 
 // Booking routes - accessible by users
-router.get('/', authorize('standard'), getUserBookings);
+
 router.post('/', authorize('standard'), bookTickets);
 router.get('/:id', authorize('standard'), getBookingById);
 router.delete('/:id', authorize('standard'), cancelBooking);
