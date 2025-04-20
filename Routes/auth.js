@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 const express = require('express');
 const router = express.Router();
 const authController = require('../Controllers/authController');
@@ -70,5 +71,13 @@ router.get('/test/admin',
         });
     }
 );
+=======
+const router = require("express").Router(); // ✅ Declare first
+const { register, login } = require("../Controllers/authController"); // ✅ Import controllers
+
+// 🔥 Define routes
+router.post("/register", register);
+router.post("/login", login);
+>>>>>>> b4e86ace6fd102bab9f8beb83cf73d61fe875253
 
 module.exports = router;

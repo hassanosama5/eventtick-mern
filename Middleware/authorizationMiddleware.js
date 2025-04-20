@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // authorizationMiddleware.js
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
@@ -70,3 +71,30 @@ exports.authorize = (...roles) => {
     next();
   };
 };
+=======
+const asyncHandler = require("express-async-handler");
+
+const authorize = (roles) => {
+  return asyncHandler(async (req, res, next) => {
+    // 1. Check if user exists (should be attached by protect middleware)
+    if (!req.user) {
+      res.status(401);
+      throw new Error("Not authenticated");
+    }
+
+    // 2. Check if user has required role
+    if (!roles.includes(req.user.role)) {
+      res.status(403);
+      throw new Error(
+        `Not authorized. Required roles: ${roles.join(", ")}. Your role: ${
+          req.user.role
+        }`
+      );
+    }
+
+    next();
+  });
+};
+
+module.exports = { authorize };
+>>>>>>> b4e86ace6fd102bab9f8beb83cf73d61fe875253

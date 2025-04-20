@@ -1,31 +1,42 @@
-const mongoose = require('mongoose');
-const express = require('express');
-const dotenv = require('dotenv');
-
-// Replace <your-database-url> with your actual MongoDB connection string
-const dbUrl = 'mongodb://localhost:27017/online-event-ticketing-system';
-const authRoutes = require('./Routes/auth');
-const userRoutes = require('./Routes/userRoutes');
-const eventRoutes = require('./Routes/eventRoutes');
-const bookingRoutes = require('./Routes/bookingRoutes');
-dotenv.config();
+const mongoose = require("mongoose");
+const express = require("express");
+const cookieParser = require("cookie-parser");
+const cors = require("cors");
 
 const app = express();
 
+// Routes
+const authRoutes = require("./Routes/auth");
+const userRoutes = require("./Routes/userRoutes");
+const eventRoutes = require("./Routes/eventRoutes");
+const bookingRoutes = require("./Routes/bookingRoutes");
 
-app.use(express.json());
+// Middleware
+const { errorHandler } = require("./Middleware/errorMiddleware");
 
-app.use('/api/v1', authRoutes);
-app.use('/api/v1/users', userRoutes);
-app.use('/api/v1/events', eventRoutes);
-app.use('/api/v1/bookings', bookingRoutes);
+// App configuration
+
+//Database Connection (using direct URL)
+
+// Hardcoded JWT secret (for development only - not for production)
+process.env.JWT_SECRET = "your-development-secret-key-12345";
+process.env.JWT_EXPIRE = "30d";
+
+// Routes
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/events", eventRoutes);
+app.use("/api/v1/bookings", bookingRoutes);
+
+// Handle 404
+// app.use("*", (req, res) => {
+//   res.status(404).json({
+//     success: false,
+//     message: "Endpoint not found",
+//   });
+// });
+
+// Error Handling Middleware (should be last)
+app.use(errorHandler);
 
 module.exports = app;
-
-
-mongoose.connect(dbUrl, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('Connected to MongoDB'))
-.catch((err) => console.error('MongoDB connection error:', err));
