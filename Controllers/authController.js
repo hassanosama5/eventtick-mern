@@ -1,7 +1,4 @@
-// At the top of your auth controller
-if (!process.env.JWT_SECRET) {
-  throw new Error('JWT_SECRET is not defined in environment variables');
-}
+
 
 // THIS IS THE BETTER VERSION FOR YOUR SYSTEM
 const User = require('../models/User');
