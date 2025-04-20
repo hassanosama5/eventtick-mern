@@ -63,7 +63,7 @@ const jwt = require("jsonwebtoken");
 //     res.status(500).json({ msg: 'Server error', error: err.message });
 //   }
 // };
-
+/*
 exports.getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
@@ -89,6 +89,8 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ msg: err.message });
   }
 };
+*/
+
 
 // Admin-only routes
 exports.getAllUsers = async (req, res) => {
