@@ -1,56 +1,274 @@
-const User = require('../models/User');
-const Booking = require('../models/Booking');
-const Event = require('../models/Event');
+const User = require("../models/User");
+const Booking = require("../models/Booking");
+const Event = require("../models/Event");
 
-exports.getProfile = (req, res) => res.json(req.user);
+exports.getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    res.json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching profile",
+    });
+  }
+};
 
 exports.updateProfile = async (req, res) => {
   try {
-    const updates = req.body;
-    const updatedUser = await User.findByIdAndUpdate(req.user._id, updates, { new: true });
-    res.json(updatedUser);
-  } catch (err) {
-    res.status(500).json({ msg: err.message });
+    const { name, email } = req.body;
+
+    // Validate input
+    if (!name && !email) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide at least one field to update",
+      });
+    }
+
+    // Check if email already exists
+    if (email) {
+      const existingUser = await User.findOne({
+        email,
+        _id: { $ne: req.user.id },
+      });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: "Email already in use",
+        });
+      }
+    }
+
+    // Build update object
+    const updateFields = {};
+    if (name) updateFields.name = name;
+    if (email) updateFields.email = email;
+
+    // Update user
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: updateFields },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      data: updatedUser,
+    });
+  } catch (error) {
+    console.error("Profile update error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating profile",
+      error: error.message,
+    });
   }
 };
 
 exports.getAllUsers = async (req, res) => {
-  const users = await User.find();
-  res.json(users);
+  try {
+    const users = await User.find().select("-password");
+    res.json({
+      success: true,
+      data: users,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching users",
+    });
+  }
 };
 
 exports.getUserById = async (req, res) => {
-  const user = await User.findById(req.params.id);
-  res.json(user);
+  try {
+    const user = await User.findById(req.params.id).select("-password");
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    res.json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching user",
+    });
+  }
 };
 
 exports.updateUserRole = async (req, res) => {
-  const user = await User.findByIdAndUpdate(req.params.id, { role: req.body.role }, { new: true });
-  res.json(user);
-};
+  try {
+    const { role } = req.body;
+    if (!role) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a role",
+      });
+    }
 
-exports.deleteUser = async (req, res) => {
-  await User.findByIdAndDelete(req.params.id);
-  res.json({ msg: 'User deleted' });
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { role },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "User role updated successfully",
+      data: user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error updating user role",
+    });
+  }
 };
 
 exports.getUserBookings = async (req, res) => {
-  const bookings = await Booking.find({ user: req.user._id }).populate('event');
-  res.json(bookings);
+  try {
+    const bookings = await Booking.find({ user: req.user.id }).populate(
+      "event"
+    );
+    res.json({
+      success: true,
+      data: bookings,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching bookings",
+    });
+  }
 };
 
 exports.getOrganizerEvents = async (req, res) => {
-  const events = await Event.find({ organizer: req.user._id });
-  res.json(events);
+  try {
+    const events = await Event.find({ organizer: req.user.id });
+    res.json({
+      success: true,
+      data: events,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching events",
+    });
+  }
 };
 
 exports.getEventAnalytics = async (req, res) => {
-  const events = await Event.find({ organizer: req.user._id });
-  const analytics = await Promise.all(events.map(async (event) => {
-    const total = event.totalTickets;
-    const booked = total - event.availableTickets;
-    const percent = total ? (booked / total) * 100 : 0;
-    return { title: event.title, percent: percent.toFixed(2) };
-  }));
-  res.json(analytics);
+  try {
+    const events = await Event.find({ organizer: req.user.id });
+    const analytics = await Promise.all(
+      events.map(async (event) => {
+        const total = event.totalTickets;
+        const booked = total - event.availableTickets;
+        const percent = total ? (booked / total) * 100 : 0;
+        return {
+          title: event.title,
+          totalTickets: total,
+          bookedTickets: booked,
+          percentageBooked: percent.toFixed(2),
+        };
+      })
+    );
+    res.json({
+      success: true,
+      data: analytics,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching analytics",
+    });
+  }
+};
+
+// Admin-only user deletion
+exports.deleteUser = async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    res.json({
+      success: true,
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error deleting user",
+      error: error.message,
+    });
+  }
+};
+
+// User self-delete account
+exports.deleteMyAccount = async (req, res) => {
+  try {
+    // Verify the user is deleting their own account
+    if (req.params.id !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only delete your own account",
+      });
+    }
+
+    const user = await User.findByIdAndDelete(req.user.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    await Booking.deleteMany({ user: req.user.id });
+    await Event.deleteMany({ organizer: req.user.id });
+
+    res.json({
+      success: true,
+      message: "Your account has been deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error deleting account",
+      error: error.message,
+    });
+  }
 };
