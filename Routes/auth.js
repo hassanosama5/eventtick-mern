@@ -3,9 +3,20 @@ const router = express.Router();
 const authController = require('../Controllers/authController');
 const { protect, authorize } = require('../Middleware/authorizationMiddleware');
 
+// Async handler wrapper
+const asyncHandler = (fn) => (req, res, next) =>
+  Promise.resolve(fn(req, res, next)).catch(next);
+
 // Authentication routes
-router.post('/register', authController.register);
-router.post('/login', authController.login);
+router.post('/register', asyncHandler(async (req, res) => {
+  console.log('Register route hit with body:', req.body);
+  await authController.register(req, res);
+}));
+
+router.post('/login', asyncHandler(async (req, res) => {
+  console.log('Login route hit with body:', req.body);
+  await authController.login(req, res);
+}));
 
 // Test routes for different roles
 router.get('/test/public', (req, res) => {
@@ -17,7 +28,7 @@ router.get('/test/public', (req, res) => {
 
 router.get('/test/user', 
     protect,
-    (req, res) => {
+    asyncHandler(async (req, res) => {
         res.json({ 
             success: true,
             message: 'Protected route - accessible by any authenticated user',
@@ -30,13 +41,13 @@ router.get('/test/user',
                 }
             }
         });
-    }
+    })
 );
 
 router.get('/test/organizer', 
     protect,
     authorize('organizer', 'admin'),
-    (req, res) => {
+    asyncHandler(async (req, res) => {
         res.json({ 
             success: true,
             message: 'Organizer route - accessible by organizers and admins only',
@@ -49,13 +60,13 @@ router.get('/test/organizer',
                 }
             }
         });
-    }
+    })
 );
 
 router.get('/test/admin', 
     protect,
     authorize('admin'),
-    (req, res) => {
+    asyncHandler(async (req, res) => {
         res.json({ 
             success: true,
             message: 'Admin route - accessible by admins only',
@@ -68,7 +79,7 @@ router.get('/test/admin',
                 }
             }
         });
-    }
+    })
 );
 
 module.exports = router;

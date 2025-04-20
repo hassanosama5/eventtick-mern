@@ -1,5 +1,3 @@
-
-
 // THIS IS THE BETTER VERSION FOR YOUR SYSTEM
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
@@ -7,6 +5,9 @@ const bcrypt = require('bcryptjs');
 
 // Generate JWT Token
 const generateToken = (user) => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not defined in environment variables');
+  }
   return jwt.sign(
     { id: user._id, role: user.role },
     process.env.JWT_SECRET,
@@ -51,17 +52,20 @@ exports.register = async (req, res) => {
       role: role || 'standard'
     });
 
-    if (user) {
-      console.log('User created successfully:', {
-        id: user._id,
-        email: user.email,
-        hashedPassword: user.password
-      });
+    if (!user) {
+      throw new Error('Failed to create user');
+    }
 
+    console.log('User created successfully:', {
+      id: user._id,
+      email: user.email
+    });
+
+    try {
       // Generate token
       const token = generateToken(user);
 
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         data: {
           _id: user._id,
@@ -71,12 +75,26 @@ exports.register = async (req, res) => {
           token
         }
       });
+    } catch (tokenError) {
+      console.error('Token generation error:', tokenError);
+      // Even if token generation fails, user was created
+      return res.status(201).json({
+        success: true,
+        data: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          message: 'User created but token generation failed'
+        }
+      });
     }
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false, 
-      message: 'Server error during registration' 
+      message: 'Server error during registration',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
