@@ -9,7 +9,7 @@ router.use(protect);
 
 router.get('/profile', getProfile);
 router.put('/profile', updateProfile);
-router.get('/bookings', authorize('user'), getUserBookings);
+router.get('/bookings', authorize('standard'), getUserBookings);
 router.get('/events', authorize('organizer'), getOrganizerEvents);
 router.get('/events/analytics', authorize('organizer'), getEventAnalytics);
 
