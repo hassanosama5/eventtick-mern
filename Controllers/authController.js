@@ -3,10 +3,7 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-// At the top of your auth controller
-if (!process.env.JWT_SECRET) {
-  throw new Error('JWT_SECRET is not defined in environment variables');
-}
+
 // Generate JWT Token
 const generateToken = (user) => {
   return jwt.sign(
