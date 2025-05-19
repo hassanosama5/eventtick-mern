@@ -17,6 +17,8 @@ import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:5000/api/v1/';
 
+// *** Replace with your actual token for testing ***
+const AUTH_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmIwZmU3NzczMjNmZTE5ODY3NjY0ZCIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NzY1MjU4MywiZXhwIjoxNzUwMjQ0NTgzfQ.e_N_BcNG97eqvxNfEvpSiPpFuj9T2K6tOtyClCqcHiw';
 const Events = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +30,11 @@ const Events = () => {
 
   const fetchEvents = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}events`);
+      const response = await axios.get(`${API_BASE_URL}events`, {
+        headers: {
+          Authorization: `Bearer ${AUTH_TOKEN}`,
+        },
+      });
       setEvents(response.data.data);
       setLoading(false);
     } catch (err) {
@@ -40,8 +46,15 @@ const Events = () => {
 
   const handleApproval = async (eventId, status) => {
     try {
+      // Map frontend status 'rejected' to backend status 'declined'
+      const backendStatus = status === 'rejected' ? 'declined' : status;
+
       await axios.patch(`${API_BASE_URL}events/${eventId}/status`, {
-        status: status
+        status: backendStatus
+      }, {
+        headers: {
+          Authorization: `Bearer ${AUTH_TOKEN}`,
+        },
       });
       // Refresh the events list
       fetchEvents();
