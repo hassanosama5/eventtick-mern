@@ -10,7 +10,7 @@ function App() {
       <CssBaseline />
       <Container>
         <Routes>
-          <Route path="/" element={<Events />} />
+          <Route path="/admin/events" element={<Events />} />
           <Route path="/admin/users" element={<AdminUsersPage />} />
         </Routes>
       </Container>
