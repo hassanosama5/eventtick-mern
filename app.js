@@ -1,31 +1,28 @@
 const mongoose = require('mongoose');
 const express = require('express');
 const dotenv = require('dotenv');
+const cors = require('cors');
 
-// Replace <your-database-url> with your actual MongoDB connection string
-const dbUrl = 'mongodb://localhost:27017/online-event-ticketing-system';
-const authRoutes = require('./Routes/auth');
-const userRoutes = require('./Routes/userRoutes');
-const eventRoutes = require('./Routes/eventRoutes');
-const bookingRoutes = require('./Routes/bookingRoutes');
 dotenv.config();
 
 const app = express();
 
-
+// Middleware
+app.use(cors());
 app.use(express.json());
 
-app.use('/api/v1', authRoutes);
-app.use('/api/v1/users', userRoutes);
-app.use('/api/v1/events', eventRoutes);
-app.use('/api/v1/bookings', bookingRoutes);
+// Routes
+app.use('/api/v1/auth', require('./Routes/auth'));
+app.use('/api/v1/users', require('./Routes/userRoutes'));
+app.use('/api/v1/events', require('./Routes/eventRoutes'));
+app.use('/api/v1/bookings', require('./Routes/bookingRoutes'));
 
+// MongoDB Connection
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/online-event-ticketing-system';
+
+mongoose.connect(MONGODB_URI)
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((err) => console.error('MongoDB connection error:', err));
+
+// Export the app instance
 module.exports = app;
-
-
-mongoose.connect(dbUrl, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('Connected to MongoDB'))
-.catch((err) => console.error('MongoDB connection error:', err));
