@@ -4,7 +4,7 @@ const Booking = require('../models/Booking');
 // Get all events (public)
 exports.getEvents = async (req, res) => {
     try {
-        const events = await Event.find({ status: 'pending' })
+        const events = await Event.find()
             .populate('organizer', 'name email');
         res.json({
             success: true,

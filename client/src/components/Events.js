@@ -12,6 +12,7 @@ import {
   Box,
   CircularProgress,
   Alert,
+  ButtonGroup,
 } from '@mui/material';
 import axios from 'axios';
 
@@ -23,6 +24,7 @@ const Events = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filter, setFilter] = useState('all');
 
   useEffect(() => {
     fetchEvents();
@@ -35,7 +37,19 @@ const Events = () => {
           Authorization: `Bearer ${AUTH_TOKEN}`,
         },
       });
-      setEvents(response.data.data);
+      
+      // Sort events to show pending events first
+      const sortedEvents = response.data.data.sort((a, b) => {
+        if (a.status === 'pending' && b.status !== 'pending') {
+          return -1; // a (pending) comes before b
+        } else if (a.status !== 'pending' && b.status === 'pending') {
+          return 1; // b (pending) comes before a
+        }
+        // Keep original order for events with the same pending status (or neither are pending)
+        return 0;
+      });
+
+      setEvents(sortedEvents); // Set sorted events
       setLoading(false);
     } catch (err) {
       setError('Failed to fetch events');
@@ -64,6 +78,12 @@ const Events = () => {
     }
   };
 
+  // Filter events based on the selected filter state
+  const filteredEvents = events.filter(event => {
+    if (filter === 'all') return true;
+    return event.status === filter;
+  });
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -80,38 +100,94 @@ const Events = () => {
     );
   }
 
+  // Function to get row background color based on status
+  const getStatusBackgroundColor = (status) => {
+    switch (status) {
+      case 'pending':
+        return '#fffacd'; // Light yellow
+      case 'approved':
+        return '#90ee90'; // Light green
+      case 'declined':
+        return '#ffb6c1'; // Light red
+      default:
+        return '#ffffff'; // Default white or alternating color
+    }
+  };
+
   return (
-    <Box p={3}>
-      <Typography variant="h4" gutterBottom>
+    <Box p={3} sx={{ backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+      <Typography variant="h4" gutterBottom sx={{ color: '#333', textAlign: 'center' }}>
         Events Management
       </Typography>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
+
+      {/* Filter Buttons */}
+      <Box mb={3} display="flex" justifyContent="center">
+        <ButtonGroup variant="contained" aria-label="event status filter buttons">
+          <Button
+            onClick={() => setFilter('all')}
+            color={filter === 'all' ? 'primary' : 'default'}
+            sx={{ textTransform: 'none' }}
+          >
+            All
+          </Button>
+          <Button
+            onClick={() => setFilter('pending')}
+            color={filter === 'pending' ? 'primary' : 'default'}
+            sx={{ textTransform: 'none' }}
+          >
+            Pending
+          </Button>
+          <Button
+            onClick={() => setFilter('approved')}
+            color={filter === 'approved' ? 'success' : 'default'}
+            sx={{ textTransform: 'none' }}
+          >
+            Approved
+          </Button>
+          <Button
+            onClick={() => setFilter('declined')}
+            color={filter === 'declined' ? 'error' : 'default'}
+            sx={{ textTransform: 'none' }}
+          >
+            Declined
+          </Button>
+        </ButtonGroup>
+      </Box>
+
+      <TableContainer component={Paper} sx={{ boxShadow: 3 }}>
+        <Table sx={{ minWidth: 650 }}>
+          <TableHead sx={{ backgroundColor: '#e0e0e0' }}>
             <TableRow>
-              <TableCell>Event Name</TableCell>
-              <TableCell>Date</TableCell>
-              <TableCell>Location</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Actions</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Event Name</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Date</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Location</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {events.map((event) => (
-              <TableRow key={event._id}>
+            {filteredEvents.map((event, index) => (
+              <TableRow
+                key={event._id}
+                sx={{
+                  // Apply status background color, fallback to alternating colors if no status color
+                  backgroundColor: getStatusBackgroundColor(event.status) || (index % 2 === 0 ? '#f9f9f9' : '#ffffff'),
+                  '&:hover': { backgroundColor: getStatusBackgroundColor(event.status) ? getStatusBackgroundColor(event.status) : '#f0f0f0' }, // Maintain status color on hover
+                }}
+              >
                 <TableCell>{event.title}</TableCell>
                 <TableCell>{new Date(event.date).toLocaleDateString()}</TableCell>
                 <TableCell>{event.location}</TableCell>
                 <TableCell>{event.status}</TableCell>
                 <TableCell>
                   {event.status === 'pending' && (
-                    <Box>
+                    <Box display="flex">
                       <Button
                         variant="contained"
                         color="success"
                         size="small"
                         onClick={() => handleApproval(event._id, 'approved')}
-                        sx={{ mr: 1 }}
+                        sx={{ mr: 1, textTransform: 'none' }}
                       >
                         Approve
                       </Button>
@@ -120,6 +196,7 @@ const Events = () => {
                         color="error"
                         size="small"
                         onClick={() => handleApproval(event._id, 'rejected')}
+                        sx={{ textTransform: 'none' }}
                       >
                         Reject
                       </Button>
