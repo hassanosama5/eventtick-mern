@@ -1,0 +1,107 @@
+/* HomePage.css */
+.home-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.hero {
+  background: linear-gradient(135deg, #3182ce 0%, #805ad5 100%);
+  color: white;
+  padding: 4rem 2rem;
+  border-radius: 12px;
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.hero-content h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.hero-content p {
+  font-size: 1.25rem;
+  max-width: 600px;
+  margin: 0 auto 2rem;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.feature-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+}
+
+.feature-card .icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.feature-card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: #2d3748;
+}
+
+.feature-card p {
+  color: #4a5568;
+}
+
+.cta {
+  text-align: center;
+  padding: 3rem;
+  background: #f7fafc;
+  border-radius: 12px;
+}
+
+.cta h2 {
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.btn.primary {
+  background: #3182ce;
+  color: white;
+}
+
+.btn.primary:hover {
+  background: #2c5282;
+}
+
+.btn.secondary {
+  background: white;
+  color: #3182ce;
+  border: 1px solid #3182ce;
+}
+
+.btn.secondary:hover {
+  background: #ebf8ff;
+}
