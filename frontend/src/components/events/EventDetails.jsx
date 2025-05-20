@@ -28,20 +28,26 @@ const EventDetails = () => {
   const token = localStorage.getItem('token');
   const isAuthenticated = !!token;
 
-  useEffect(() => {
-    const fetchEventDetails = async () => {
-      try {
-        const response = await axios.get(`${API_BASE_URL}events/${id}`);
-        setEvent(response.data.data);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to fetch event details. Please try again later.');
-        setLoading(false);
-      }
-    };
+  // Function to fetch event details - reusable
+  const fetchEventDetails = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}events/${id}`);
+      setEvent(response.data.data);
+      setLoading(false);
+    } catch (err) {
+      setError('Failed to fetch event details. Please try again later.');
+      setLoading(false);
+    }
+  };
 
-    fetchEventDetails();
+  useEffect(() => {
+    fetchEventDetails(); // Initial fetch on component mount or id change
   }, [id]);
+
+  // Callback function to refetch event details after a successful booking
+  const handleBookingSuccess = () => {
+    fetchEventDetails();
+  };
 
   if (loading) {
     return (
@@ -126,8 +132,9 @@ const EventDetails = () => {
             {isAuthenticated && event ? (
               <BookTicketForm 
                 eventId={event._id} 
-                ticketPrice={event.price}
+                ticketPrice={event.price} 
                 availableTickets={event.availableTickets}
+                onBookingSuccess={handleBookingSuccess} // Pass the callback
               />
             ) : (
               !isAuthenticated && (

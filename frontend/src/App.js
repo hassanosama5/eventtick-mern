@@ -1,6 +1,6 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, CssBaseline } from '@mui/material';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { ThemeProvider, CssBaseline, Box, Button } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 
 // Components
@@ -38,6 +38,18 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
+        {/* Basic Navigation using Material-UI Buttons */}
+        <Box sx={{
+          padding: '10px',
+          background: '#f0f0f0',
+          marginBottom: '20px', // Add some space below the nav
+          display: 'flex', // Use flexbox for layout
+          gap: '10px' // Add space between buttons
+        }} component="nav">
+          <Button component={Link} to="/my-bookings" variant="text">My Bookings</Button>
+          <Button component={Link} to="/events" variant="text">All Events</Button>
+        </Box>
+
         <Routes>
           {/* Event Routes */}
           <Route path="/events" element={<EventList />} />
