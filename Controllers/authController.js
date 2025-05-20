@@ -6,9 +6,14 @@ const nodemailer = require("nodemailer");
 
 // Generate JWT Token
 const generateToken = (user) => {
-  return jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
-    expiresIn: "30d",
-  });
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not defined in environment variables');
+  }
+  return jwt.sign(
+    { id: user._id, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: '30d' }
+  );
 };
 
 // @desc    Register a new user
@@ -20,6 +25,7 @@ exports.register = async (req, res) => {
 
     // Validate input
     if (!name || !email || !password) {
+      console.log("Missing required fields in body");
       return res.status(400).json({
         success: false,
         message: "Please provide all required fields",
@@ -29,6 +35,7 @@ exports.register = async (req, res) => {
     // Check if user exists
     const userExists = await User.findOne({ email });
     if (userExists) {
+      console.log("User already exists:", email);
       return res.status(400).json({
         success: false,
         message: "User already exists",
@@ -48,17 +55,21 @@ exports.register = async (req, res) => {
       role: role || "standard",
     });
 
-    if (user) {
-      console.log("User created successfully:", {
-        id: user._id,
-        email: user.email,
-        hashedPassword: user.password,
-      });
+    if (!user) {
+      console.log("Failed to create user in DB");
+      throw new Error('Failed to create user');
+    }
 
+    console.log("User created successfully:", {
+      id: user._id,
+      email: user.email
+    });
+
+    try {
       // Generate token
       const token = generateToken(user);
 
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         data: {
           _id: user._id,
@@ -68,12 +79,26 @@ exports.register = async (req, res) => {
           token,
         },
       });
+    } catch (tokenError) {
+      console.error('Token generation error:', tokenError);
+      // Even if token generation fails, user was created
+      return res.status(201).json({
+        success: true,
+        data: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          message: 'User created but token generation failed'
+        }
+      });
     }
   } catch (error) {
-    console.error("Registration error:", error);
-    res.status(500).json({
+    console.error("Registration error in catch block:", error);
+    return res.status(500).json({
       success: false,
       message: "Server error during registration",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

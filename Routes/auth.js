@@ -3,14 +3,27 @@ const router = express.Router();
 const authController = require("../Controllers/authController");
 const { protect, authorize } = require("../Middleware/authorizationMiddleware");
 
+// Async handler wrapper
+const asyncHandler = (fn) => (req, res, next) =>
+  Promise.resolve(fn(req, res, next)).catch(next);
+
 // Authentication routes
-router.post("/register", authController.register);
-router.post("/login", authController.login);
-//{ forgotPass maasooma 3 steps
-router.put("/forgotPassword", authController.forgotPassword); // Step 1
-router.post("/verify-otp", authController.verifyOTP); // Step 2
-router.put("/reset-password", protect, authController.resetPassword); // Step 3
-//}
+// router.post('/register', asyncHandler(async (req, res) => {
+//   console.log('Register route hit with body:', req.body);
+//   await authController.register(req, res);
+// }));
+router.post('/register', asyncHandler(authController.register));
+
+// router.post('/login', asyncHandler(async (req, res) => {
+//   console.log('Login route hit with body:', req.body);
+//   await authController.login(req, res);
+// }));
+router.post('/login', asyncHandler(authController.login));
+
+// Password reset routes
+router.put("/forgotPassword", asyncHandler(authController.forgotPassword));
+router.post("/verify-otp", asyncHandler(authController.verifyOTP));
+router.put("/reset-password", protect, asyncHandler(authController.resetPassword));
 
 // Test routes for different roles
 router.get("/test/public", (req, res) => {
@@ -20,54 +33,60 @@ router.get("/test/public", (req, res) => {
   });
 });
 
-router.get("/test/user", protect, (req, res) => {
-  res.json({
-    success: true,
-    message: "Protected route - accessible by any authenticated user",
-    data: {
-      user: {
-        id: req.user._id,
-        name: req.user.name,
-        email: req.user.email,
-        role: req.user.role,
-      },
-    },
-  });
-});
-
-router.get(
-  "/test/organizer",
+router.get('/test/user', 
   protect,
-  authorize("organizer", "admin"),
-  (req, res) => {
-    res.json({
+  asyncHandler(async (req, res) => {
+    res.json({ 
       success: true,
-      message: "Organizer route - accessible by organizers and admins only",
+      message: 'Protected route - accessible by any authenticated user',
       data: {
         user: {
           id: req.user._id,
           name: req.user.name,
           email: req.user.email,
-          role: req.user.role,
-        },
-      },
+          role: req.user.role
+        }
+      }
     });
-  }
+  })
 );
 
-router.get("/test/admin", protect, authorize("admin"), (req, res) => {
-  res.json({
-    success: true,
-    message: "Admin route - accessible by admins only",
-    data: {
-      user: {
-        id: req.user._id,
-        name: req.user.name,
-        email: req.user.email,
-        role: req.user.role,
-      },
-    },
-  });
-});
+router.get('/test/organizer', 
+  protect,
+  authorize('organizer', 'admin'),
+  asyncHandler(async (req, res) => {
+    res.json({ 
+      success: true,
+      message: 'Organizer route - accessible by organizers and admins only',
+      data: {
+        user: {
+          id: req.user._id,
+          name: req.user.name,
+          email: req.user.email,
+          role: req.user.role
+        }
+      }
+    });
+  })
+);
+
+router.get('/test/admin', 
+  protect,
+  authorize('admin'),
+  asyncHandler(async (req, res) => {
+    res.json({ 
+      success: true,
+      message: 'Admin route - accessible by admins only',
+      data: {
+        user: {
+          id: req.user._id,
+          name: req.user.name,
+          email: req.user.email,
+          role: req.user.role
+        }
+      }
+    });
+  })
+);
 
 module.exports = router;

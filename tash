@@ -1,0 +1,212 @@
+[1mdiff --cc Controllers/authController.js[m
+[1mindex 96cc1b0,784dc01..0000000[m
+[1m--- a/Controllers/authController.js[m
+[1m+++ b/Controllers/authController.js[m
+[36m@@@ -1,167 -1,294 +1,71 @@@[m
+[31m- // THIS IS THE BETTER VERSION FOR YOUR SYSTEM[m
+[31m- const User = require('../models/User');[m
+[31m- const jwt = require('jsonwebtoken');[m
+[31m- const bcrypt = require('bcryptjs');[m
+[31m -const User = require("../models/User");[m
+[31m -const jwt = require("jsonwebtoken");[m
+[31m -const bcrypt = require("bcryptjs");[m
+[31m -const crypto = require("crypto");[m
+[31m -const nodemailer = require("nodemailer");[m
+[31m--[m
+[31m--// Generate JWT Token[m
+[31m--const generateToken = (user) => {[m
+[31m-   if (!process.env.JWT_SECRET) {[m
+[31m-     throw new Error('JWT_SECRET is not defined in environment variables');[m
+[31m-   }[m
+[31m-   return jwt.sign([m
+[31m-     { id: user._id, role: user.role },[m
+[31m-     process.env.JWT_SECRET,[m
+[31m-     { expiresIn: '30d' }[m
+[31m-   );[m
+[31m -  return jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {[m
+[31m -    expiresIn: "30d",[m
+[31m -  });[m
+[31m--};[m
+[31m--[m
+[31m--// @desc    Register a new user[m
+[31m--// @route   POST /api/v1/register[m
+  exports.register = async (req, res) => {[m
+    try {[m
+[31m--    const { name, email, password, role } = req.body;[m
+[31m-     console.log('Registration attempt for:', email);[m
+[32m++    const { name, email, password, role = 'standard' } = req.body;[m
+[32m+     console.log("Registration attempt for:", email);[m
+  [m
+      // Validate input[m
+      if (!name || !email || !password) {[m
+[31m-       return res.status(400).json({ [m
+[31m-         success: false, [m
+[31m-         message: 'Please provide all required fields' [m
+[32m+       return res.status(400).json({[m
+[32m+         success: false,[m
+[31m -        message: "Please provide all required fields",[m
+[32m++        message: "Please provide name, email and password",[m
+[32m++      });[m
+[32m++    }[m
+[32m++[m
+[32m++    // Validate email format[m
+[32m++    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {[m
+[32m++      return res.status(400).json({[m
+[32m++        success: false,[m
+[32m++        message: "Please provide a valid email address",[m
+        });[m
+      }[m
+  [m
+      // Check if user exists[m
+      const userExists = await User.findOne({ email });[m
+      if (userExists) {[m
+[31m-       return res.status(400).json({ [m
+[31m-         success: false, [m
+[31m-         message: 'User already exists' [m
+[31m -      return res.status(400).json({[m
+[32m++      return res.status(409).json({ // 409 Conflict is more appropriate[m
+[32m+         success: false,[m
+[32m+         message: "User already exists",[m
+        });[m
+      }[m
+  [m
+[31m--    // Generate salt and hash password[m
+[31m--    const salt = await bcrypt.genSalt(10);[m
+[31m--    const hashedPassword = await bcrypt.hash(password, salt);[m
+[31m-     console.log('Password hashed successfully');[m
+[32m++    // Hash password[m
+[32m++    const hashedPassword = await bcrypt.hash(password, 10);[m
+[32m+     console.log("Password hashed successfully");[m
+  [m
+      // Create user[m
+      const user = await User.create({[m
+        name,[m
+        email,[m
+        password: hashedPassword,[m
+[31m-       role: role || 'standard'[m
+[31m -      role: role || "standard",[m
+[32m++      role,[m
+      });[m
+  [m
+[31m-     if (!user) {[m
+[31m-       throw new Error('Failed to create user');[m
+[31m-     }[m
+[31m -    if (user) {[m
+[31m -      console.log("User created successfully:", {[m
+[31m -        id: user._id,[m
+[31m -        email: user.email,[m
+[31m -        hashedPassword: user.password,[m
+[31m -      });[m
+[31m--[m
+[31m-     console.log('User created successfully:', {[m
+[31m -      // Generate token[m
+[31m -      const token = generateToken(user);[m
+[31m -[m
+[31m -      res.status(201).json({[m
+[31m -        success: true,[m
+[31m -        data: {[m
+[31m -          _id: user._id,[m
+[31m -          name: user.name,[m
+[31m -          email: user.email,[m
+[31m -          role: user.role,[m
+[31m -          token,[m
+[31m -        },[m
+[31m -      });[m
+[31m -    }[m
+[31m -  } catch (error) {[m
+[31m -    console.error("Registration error:", error);[m
+[31m -    res.status(500).json({[m
+[31m -      success: false,[m
+[31m -      message: "Server error during registration",[m
+[32m++    console.log("User created successfully:", {[m
+[32m +      id: user._id,[m
+[31m-       email: user.email[m
+[31m-     });[m
+[31m- [m
+[31m-     try {[m
+[31m-       // Generate token[m
+[31m-       const token = generateToken(user);[m
+[31m- [m
+[31m-       return res.status(201).json({[m
+[31m-         success: true,[m
+[31m-         data: {[m
+[31m-           _id: user._id,[m
+[31m-           name: user.name,[m
+[31m-           email: user.email,[m
+[31m-           role: user.role,[m
+[31m-           token[m
+[31m-         }[m
+[31m-       });[m
+[31m-     } catch (tokenError) {[m
+[31m-       console.error('Token generation error:', tokenError);[m
+[31m-       // Even if token generation fails, user was created[m
+[31m-       return res.status(201).json({[m
+[31m-         success: true,[m
+[31m-         data: {[m
+[31m-           _id: user._id,[m
+[31m-           name: user.name,[m
+[31m-           email: user.email,[m
+[31m-           role: user.role,[m
+[31m-           message: 'User created but token generation failed'[m
+[31m-         }[m
+[31m-       });[m
+[31m-     }[m
+[31m-   } catch (error) {[m
+[31m-     console.error('Registration error:', error);[m
+[31m-     return res.status(500).json({ [m
+[31m-       success: false, [m
+[31m-       message: 'Server error during registration',[m
+[31m-       error: process.env.NODE_ENV === 'development' ? error.message : undefined[m
+[32m++      email: user.email,[m
+[32m++      // Removed logging hashed password for security[m
+      });[m
+[31m--  }[m
+[31m--};[m
+[31m--[m
+[31m--// @desc    Login user[m
+[31m--// @route   POST /api/v1/login[m
+[31m--exports.login = async (req, res) => {[m
+[31m--  try {[m
+[31m--    const { email, password } = req.body;[m
+[31m-     console.log('Login attempt for:', email);[m
+[31m -    console.log("Login attempt for:", email);[m
+[31m--[m
+[31m--    // Validate input[m
+[31m--    if (!email || !password) {[m
+[31m-       return res.status(400).json({ [m
+[31m-         success: false, [m
+[31m-         message: 'Please provide email and password' [m
+[31m -      return res.status(400).json({[m
+[31m -        success: false,[m
+[31m -        message: "Please provide email and password",[m
+[31m--      });[m
+[31m--    }[m
+[31m--[m
+[31m--    // Find user and explicitly select password[m
+[31m-     console.log('Finding user with email:', email);[m
+[31m -    console.log("Finding user with email:", email);[m
+[31m--    const user = await User.findOne({ email });[m
+[31m-     console.log('User found:', !!user);[m
+[31m -    console.log("User found:", !!user);[m
+[31m--[m
+[31m--    if (!user) {[m
+[31m-       console.log('No user found with this email');[m
+[31m-       return res.status(401).json({ [m
+[31m-         success: false, [m
+[31m-         message: 'Invalid credentials' [m
+[31m -      console.log("No user found with this email");[m
+[31m -      return res.status(401).json({[m
+[31m -        success: false,[m
+[31m -        message: "Invalid credentials",[m
+[31m--      });[m
+[31m--    }[m
+[31m--[m
+[31m-     console.log('Stored hashed password:', user.password);[m
+[31m-     console.log('Attempting password comparison');[m
+[31m -    console.log("Stored hashed password:", user.password);[m
+[31m -    console.log("Attempting password comparison");[m
+[31m--[m
+[31m--    // Verify password using bcrypt directly[m
+[31m--    const isMatch = await bcrypt.compare(password, user.password);[m
+[31m-     console.log('Password match result:', isMatch);[m
+[31m
