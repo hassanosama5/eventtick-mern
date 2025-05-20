@@ -6,6 +6,7 @@ const { protect, authorize } = require("../Middleware/authMiddleware");
 // Authentication routes
 router.post("/register", authController.register);
 router.post("/login", authController.login);
+router.post("/logout", authController.logout);
 
 router.get("/me", (req, res) => {
   if (req.user) {

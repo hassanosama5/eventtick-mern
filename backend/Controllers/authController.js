@@ -87,6 +87,7 @@ exports.register = async (req, res) => {
 
 // @desc    Login user
 // @route   POST /api/v1/login
+// @route   POST /api/v1/login
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -113,7 +114,6 @@ exports.login = async (req, res) => {
       });
     }
 
-    console.log("Plain Password: ", password);
     console.log("Stored hashed password:", user.password);
     console.log("Attempting password comparison");
 
@@ -298,6 +298,30 @@ exports.resetPassword = async (req, res) => {
       success: false,
       message: "Password reset failed",
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
+// controllers/authController.js
+exports.logout = (req, res) => {
+  try {
+    // 1. Clear the HTTP-only cookie
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    // 2. Send success response
+    res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Logout failed",
     });
   }
 };
