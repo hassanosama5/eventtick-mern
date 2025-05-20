@@ -58,6 +58,13 @@ exports.register = async (req, res) => {
       // Generate token
       const token = generateToken(user);
 
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Strict",
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
+
       res.status(201).json({
         success: true,
         data: {
@@ -65,7 +72,7 @@ exports.register = async (req, res) => {
           name: user.name,
           email: user.email,
           role: user.role,
-          token,
+          token, //momkn nshelha bs ana saybha ashan tezhar fe postman bs kda kda use cookies
         },
       });
     }
@@ -106,6 +113,7 @@ exports.login = async (req, res) => {
       });
     }
 
+    console.log("Plain Password: ", password);
     console.log("Stored hashed password:", user.password);
     console.log("Attempting password comparison");
 
@@ -256,7 +264,8 @@ exports.resetPassword = async (req, res) => {
     }
 
     // Hash the new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
 
     // Update user document
     const updatedUser = await User.findByIdAndUpdate(

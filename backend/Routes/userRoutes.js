@@ -11,7 +11,7 @@ const {
   getEventAnalytics,
   deleteMyAccount,
 } = require("../Controllers/userController");
-const { protect, authorize } = require("../Middleware/authorizationMiddleware");
+const { protect, authorize } = require("../Middleware/authMiddleware");
 
 router.use(protect);
 
