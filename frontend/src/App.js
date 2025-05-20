@@ -7,6 +7,8 @@ import { createTheme } from '@mui/material/styles';
 import EventList from './components/events/EventList';
 import EventDetails from './components/events/EventDetails';
 import UserBookings from './components/bookings/UserBookings';
+import Events from './components/Events';
+import AdminUsersPage from './components/AdminUsersPage';
 
 // Create a theme instance
 const theme = createTheme({
@@ -46,6 +48,12 @@ function App() {
           
           {/* Redirect root to events page */}
           <Route path="/" element={<EventList />} />
+
+          {/* Admin Event Management Route */}
+          <Route path="/admin/events" element={<Events />} />
+
+          {/* Admin Users Management Route */}
+          <Route path="/admin/users" element={<AdminUsersPage />} />
         </Routes>
       </Router>
     </ThemeProvider>

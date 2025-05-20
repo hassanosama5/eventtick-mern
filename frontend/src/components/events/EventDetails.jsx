@@ -16,18 +16,22 @@ import { format } from 'date-fns';
 import axios from 'axios';
 import BookTicketForm from './BookTicketForm';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const EventDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Consider user authenticated if token exists in localStorage
+  const token = localStorage.getItem('token');
+  const isAuthenticated = !!token;
 
   useEffect(() => {
     const fetchEventDetails = async () => {
       try {
-        const response = await axios.get(`/api/v1/events/${id}`);
+        const response = await axios.get(`${API_BASE_URL}events/${id}`);
         setEvent(response.data.data);
         setLoading(false);
       } catch (err) {
@@ -36,31 +40,7 @@ const EventDetails = () => {
       }
     };
 
-    const checkAuth = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (token) {
-          const response = await axios.get('/api/v1/users/profile', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          if (response.data && response.data.success) {
-            setIsAuthenticated(true);
-          } else {
-            setIsAuthenticated(false);
-            localStorage.removeItem('token');
-          }
-        } else {
-          setIsAuthenticated(false);
-        }
-      } catch (err) {
-        console.error('Auth check failed:', err);
-        setIsAuthenticated(false);
-        localStorage.removeItem('token');
-      }
-    };
-
     fetchEventDetails();
-    checkAuth();
   }, [id]);
 
   if (loading) {

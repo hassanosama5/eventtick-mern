@@ -25,6 +25,7 @@ const AUTH_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmIwZmU3Nzc
 // ******************************************************
 
 const AdminUsersPage = () => {
+  console.log('AdminUsersPage component rendering');
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -33,14 +34,16 @@ const AdminUsersPage = () => {
   const [selectedUser, setSelectedUser] = useState(null); // State to hold user for modal/dialog
 
   useEffect(() => {
+    console.log('AdminUsersPage useEffect running');
     fetchUsers();
   }, []);
 
   const fetchUsers = async () => {
+    console.log('fetchUsers function called');
     try {
-      const response = await axios.get(`${API_BASE_URL}users`, {
+      const response = await axios.get(`${API_BASE_URL}admin/users`, {
         headers: {
-          Authorization: `Bearer ${AUTH_TOKEN}`,
+          Authorization: `Bearer ${localStorage.getItem('token') || AUTH_TOKEN}`,
         },
       });
       setUsers(response.data.data); // Assuming the backend returns data in response.data.data
@@ -68,9 +71,9 @@ const AdminUsersPage = () => {
   const handleUpdateRoleConfirm = async (userId, newRole) => {
     console.log(`Confirming update role for user ${userId} to ${newRole}`);
     try {
-        await axios.put(`${API_BASE_URL}users/${userId}`, { role: newRole }, {
+        await axios.put(`${API_BASE_URL}admin/users/${userId}`, { role: newRole }, {
             headers: {
-                Authorization: `Bearer ${AUTH_TOKEN}`,
+                Authorization: `Bearer ${localStorage.getItem('token') || AUTH_TOKEN}`,
             },
         });
         fetchUsers(); // Refresh list after update
@@ -97,9 +100,9 @@ const AdminUsersPage = () => {
     if (!selectedUser) return; // Should not happen if dialog is opened correctly
     console.log(`Confirming delete for user ${selectedUser._id}`);
     try {
-        await axios.delete(`${API_BASE_URL}users/${selectedUser._id}`, {
+        await axios.delete(`${API_BASE_URL}admin/users/${selectedUser._id}`, {
             headers: {
-                Authorization: `Bearer ${AUTH_TOKEN}`,
+                Authorization: `Bearer ${localStorage.getItem('token') || AUTH_TOKEN}`,
             },
         });
         fetchUsers(); // Refresh list after deletion

@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, Typography, Box, Chip } from '@mui/material';
+import { Card, CardContent, Typography, Box, Chip, ButtonGroup, Button } from '@mui/material';
 import { format } from 'date-fns';
 
-const EventCard = ({ event }) => {
+const EventCard = ({ event, onApprove, onDecline, showActions }) => {
   const {
     _id,
     title,
@@ -11,7 +11,8 @@ const EventCard = ({ event }) => {
     location,
     price,
     imageUrl,
-    category
+    category,
+    status
   } = event;
 
   return (
@@ -57,6 +58,14 @@ const EventCard = ({ event }) => {
               variant="outlined"
             />
           </Box>
+          {showActions && status === 'pending' && (
+            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+              <ButtonGroup variant="contained" aria-label="event status actions">
+                <Button color="success" onClick={() => onApprove(_id)}>Approve</Button>
+                <Button color="error" onClick={() => onDecline(_id)}>Decline</Button>
+              </ButtonGroup>
+            </Box>
+          )}
         </CardContent>
       </Card>
     </Link>

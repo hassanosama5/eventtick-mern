@@ -28,6 +28,7 @@ const authRoutes = require('./Routes/auth');
 const userRoutes = require('./Routes/userRoutes');
 const eventRoutes = require('./Routes/eventRoutes');
 const bookingRoutes = require('./Routes/bookingRoutes');
+const adminUserRoutes = require('./Routes/adminUserRoutes');
 
 // Test route to verify server is working
 app.get('/', (req, res) => {
@@ -36,8 +37,9 @@ app.get('/', (req, res) => {
 
 app.use('/api/v1', authRoutes);
 app.use('/api/v1/users', userRoutes);
-app.use('/api/v1/events', eventRoutes);
+app.use('/api/v1/events', require('./Routes/eventRoutes'));
 app.use('/api/v1/bookings', bookingRoutes);
+app.use('/api/v1/admin/users', adminUserRoutes);
 
 // 404 handler
 app.use((req, res, next) => {

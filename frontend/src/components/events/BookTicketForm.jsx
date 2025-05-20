@@ -9,6 +9,8 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const BookTicketForm = ({ eventId, ticketPrice, availableTickets }) => {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -31,11 +33,10 @@ const BookTicketForm = ({ eventId, ticketPrice, availableTickets }) => {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        '/api/v1/bookings',
+        `${API_BASE_URL}bookings`,
         {
           eventId,
-          quantity,
-          totalPrice: quantity * ticketPrice
+          quantity
         },
         {
           headers: { Authorization: `Bearer ${token}` }

@@ -23,6 +23,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import axios from 'axios';
 import { format } from 'date-fns';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const UserBookings = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +41,7 @@ const UserBookings = () => {
         setLoading(false);
         return;
       }
-      const response = await axios.get('/api/v1/users/bookings', {
+      const response = await axios.get(`${API_BASE_URL}users/bookings`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setBookings(response.data.data);
@@ -68,7 +70,7 @@ const UserBookings = () => {
     if (!bookingToCancel) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`/api/v1/bookings/${bookingToCancel}`, {
+      await axios.delete(`${API_BASE_URL}bookings/${bookingToCancel}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       // Remove the cancelled booking from the state

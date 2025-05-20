@@ -12,6 +12,8 @@ import {
 import EventCard from './EventCard';
 import axios from 'axios';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const EventList = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +34,7 @@ const EventList = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await axios.get('/api/v1/events?status=approved');
+        const response = await axios.get(`${API_BASE_URL}events/approved`);
         setEvents(response.data.data);
         setLoading(false);
       } catch (err) {
