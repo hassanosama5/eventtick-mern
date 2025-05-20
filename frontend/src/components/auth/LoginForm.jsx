@@ -11,10 +11,11 @@ export default function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await login(email, password);
-      // eslint-disable-next-line no-unused-vars
+      await login(email.trim(), password.trim()); // Added trim() to remove whitespace
+      navigate("/"); // Explicit navigation after successful login
     } catch (err) {
-      // Error is already displayed via AuthContext
+      console.error("Login error:", err);
+      // Error is already handled in AuthContext
     }
   };
 
@@ -26,6 +27,7 @@ export default function LoginForm() {
         onChange={(e) => setEmail(e.target.value)}
         placeholder="Email"
         required
+        autoComplete="username" // Helps password managers
       />
       <input
         type="password"
@@ -33,12 +35,17 @@ export default function LoginForm() {
         onChange={(e) => setPassword(e.target.value)}
         placeholder="Password"
         required
+        autoComplete="current-password" // Helps password managers
       />
-      <button type="submit" disabled={isLoading}>
+      <button type="submit" disabled={isLoading} aria-busy={isLoading}>
         {isLoading ? "Logging in..." : "Login"}
       </button>
       {error && <p className="error">{error}</p>}
-      <button type="button" onClick={() => navigate("/forgot-password")}>
+      <button
+        type="button"
+        onClick={() => navigate("/forgot-password")}
+        className="secondary-btn"
+      >
         Forgot Password?
       </button>
     </form>

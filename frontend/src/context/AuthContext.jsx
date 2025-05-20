@@ -45,6 +45,7 @@ function reducer(state, action) {
 export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [tempToken, setTempToken] = useState(null); // <-- tempToken for reset flow
+  const [resetEmail, setResetEmail] = useState(null); // Add this line
 
   const navigate = useNavigate();
 
@@ -54,13 +55,19 @@ export function AuthProvider({ children }) {
       try {
         const response = await axios.get("http://localhost:5000/api/v1/me", {
           withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
         dispatch({ type: "AUTH_SUCCESS", payload: response.data });
-        // eslint-disable-next-line no-unused-vars
       } catch (err) {
+        // Clear invalid credentials
+        document.cookie =
+          "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         dispatch({ type: "LOGOUT" });
       }
     };
+
     checkAuth();
   }, []);
 
@@ -93,12 +100,20 @@ export function AuthProvider({ children }) {
     try {
       const response = await axios.post(
         "http://localhost:5000/api/v1/login",
-        { email, password },
-        { withCredentials: true }
+        { email, password }
+        // {
+        //   withCredentials: true,
+        //   headers: {
+        //     "Content-Type": "application/json",
+        //   },
+        // }
       );
-      dispatch({ type: "AUTH_SUCCESS", payload: response.data });
+
+      // Store token in memory (not localStorage for security)
+      dispatch({ type: "AUTH_SUCCESS", payload: response.data.user });
       navigate("/");
     } catch (err) {
+      console.error("Login error:", err.response?.data);
       dispatch({
         type: "AUTH_FAILURE",
         payload: err.response?.data?.message || "Login failed",
@@ -112,6 +127,7 @@ export function AuthProvider({ children }) {
     dispatch({ type: "FORGOT_PASSWORD_START" });
     try {
       await axios.put("http://localhost:5000/api/v1/forgotPassword", { email });
+      setResetEmail(email);
       dispatch({ type: "FORGOT_PASSWORD_SUCCESS" });
       return true; // Success
     } catch (err) {
@@ -145,24 +161,40 @@ export function AuthProvider({ children }) {
   };
 
   const resetPassword = async (newPassword) => {
+    dispatch({ type: "FORGOT_PASSWORD_START" }); // Use loading state
     try {
-      await axios.put(
+      const response = await axios.put(
         "http://localhost:5000/api/v1/reset-password",
         { newPassword },
-        { withCredentials: true } // You may or may not need this depending on your auth setup
+        {
+          headers: {
+            Authorization: `Bearer ${tempToken}`,
+          },
+        }
       );
 
-      // ✅ CLEAR existing auth cookies/state
-      document.cookie = "token=; Max-Age=0"; // clear token cookie
-      localStorage.removeItem("user"); // or however you store user data
-      dispatch({ type: "LOGOUT" }); // if you're using a context/reducer
+      // Clear the temp token after successful reset
+      setTempToken(null);
 
-      // ✅ Redirect to login screen
-      navigate("/login");
-      alert("Password reset successful. Please log in again.");
+      // Attempt automatic login
+      if (resetEmail) {
+        await new Promise((resolve) => setTimeout(resolve, 300)); // Short delay
+        await login(resetEmail, newPassword);
+      }
+      // Dispatch success action
+      dispatch({ type: "FORGOT_PASSWORD_SUCCESS" });
+      // IMPORTANT: Wait for the operation to complete
+      console.log("Reset response:", response.data);
+
+      // Return success message or data
+      return response.data;
     } catch (err) {
-      console.error("Reset failed", err);
-      alert("Reset failed");
+      const errorMsg = err.response?.data?.message || "Reset failed";
+      dispatch({
+        type: "AUTH_FAILURE",
+        payload: errorMsg,
+      });
+      throw new Error(errorMsg);
     }
   };
 
@@ -170,11 +202,24 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     try {
       await axios.post(
-        "http://localhost:5000/api/v1/logout",
+        "http://localhost:5000/api/v1/logout", // Updated endpoint
         {},
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
-    } finally {
+
+      // Clear frontend state
+      dispatch({ type: "LOGOUT" });
+      localStorage.removeItem("user"); // If you store user data
+
+      navigate("/login");
+    } catch (err) {
+      console.error("Logout error:", err);
+      // Force logout even if API fails
       dispatch({ type: "LOGOUT" });
       navigate("/login");
     }
@@ -192,6 +237,8 @@ export function AuthProvider({ children }) {
         resetPassword,
         tempToken, // <-- exposed for use elsewhere if needed eltemp token elbteegi after eluser ydakhal correct otp
         setTempToken, // <-- exposed in case you want to clear manually
+        resetEmail, // Expose if needed
+        setResetEmail, // Expose if needed
       }}
     >
       {children}
