@@ -8,15 +8,17 @@ const asyncHandler = (fn) => (req, res, next) =>
   Promise.resolve(fn(req, res, next)).catch(next);
 
 // Authentication routes
-router.post('/register', asyncHandler(async (req, res) => {
-  console.log('Register route hit with body:', req.body);
-  await authController.register(req, res);
-}));
+// router.post('/register', asyncHandler(async (req, res) => {
+//   console.log('Register route hit with body:', req.body);
+//   await authController.register(req, res);
+// }));
+router.post('/register', asyncHandler(authController.register));
 
-router.post('/login', asyncHandler(async (req, res) => {
-  console.log('Login route hit with body:', req.body);
-  await authController.login(req, res);
-}));
+// router.post('/login', asyncHandler(async (req, res) => {
+//   console.log('Login route hit with body:', req.body);
+//   await authController.login(req, res);
+// }));
+router.post('/login', asyncHandler(authController.login));
 
 // Password reset routes
 router.put("/forgotPassword", asyncHandler(authController.forgotPassword));

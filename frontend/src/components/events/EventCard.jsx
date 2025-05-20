@@ -9,7 +9,7 @@ const EventCard = ({ event }) => {
     title,
     date,
     location,
-    ticketPrice,
+    price,
     imageUrl,
     category
   } = event;
@@ -48,7 +48,7 @@ const EventCard = ({ event }) => {
           </Typography>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
             <Typography variant="h6" color="primary">
-              ${ticketPrice}
+              ${price}
             </Typography>
             <Chip 
               label={category} 

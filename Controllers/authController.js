@@ -25,6 +25,7 @@ exports.register = async (req, res) => {
 
     // Validate input
     if (!name || !email || !password) {
+      console.log("Missing required fields in body");
       return res.status(400).json({
         success: false,
         message: "Please provide all required fields",
@@ -34,6 +35,7 @@ exports.register = async (req, res) => {
     // Check if user exists
     const userExists = await User.findOne({ email });
     if (userExists) {
+      console.log("User already exists:", email);
       return res.status(400).json({
         success: false,
         message: "User already exists",
@@ -54,6 +56,7 @@ exports.register = async (req, res) => {
     });
 
     if (!user) {
+      console.log("Failed to create user in DB");
       throw new Error('Failed to create user');
     }
 
@@ -91,7 +94,7 @@ exports.register = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("Registration error:", error);
+    console.error("Registration error in catch block:", error);
     return res.status(500).json({
       success: false,
       message: "Server error during registration",

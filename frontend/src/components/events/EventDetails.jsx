@@ -40,13 +40,22 @@ const EventDetails = () => {
       try {
         const token = localStorage.getItem('token');
         if (token) {
-          await axios.get('/api/v1/users/me', {
+          const response = await axios.get('/api/v1/users/profile', {
             headers: { Authorization: `Bearer ${token}` }
           });
-          setIsAuthenticated(true);
+          if (response.data && response.data.success) {
+            setIsAuthenticated(true);
+          } else {
+            setIsAuthenticated(false);
+            localStorage.removeItem('token');
+          }
+        } else {
+          setIsAuthenticated(false);
         }
       } catch (err) {
+        console.error('Auth check failed:', err);
         setIsAuthenticated(false);
+        localStorage.removeItem('token');
       }
     };
 
@@ -78,6 +87,8 @@ const EventDetails = () => {
     );
   }
 
+  const eventPrice = event?.price;
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Grid container spacing={4}>
@@ -86,7 +97,7 @@ const EventDetails = () => {
           <Box
             sx={{
               height: 400,
-              backgroundImage: `url(${event.imageUrl || '/default-event.jpg'})`,
+              backgroundImage: `url(${event?.imageUrl || '/default-event.jpg'})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               borderRadius: 2
@@ -98,59 +109,58 @@ const EventDetails = () => {
         <Grid item xs={12} md={6}>
           <Paper elevation={3} sx={{ p: 3 }}>
             <Typography variant="h4" component="h1" gutterBottom>
-              {event.title}
+              {event?.title}
             </Typography>
             
             <Chip 
-              label={event.category} 
+              label={event?.category} 
               color="primary" 
               sx={{ mb: 2 }}
             />
 
             <Typography variant="h6" color="primary" gutterBottom>
-              ${event.ticketPrice}
+              ${eventPrice}
             </Typography>
 
             <Box sx={{ my: 2 }}>
               <Typography variant="body1" gutterBottom>
-                📅 {format(new Date(event.date), 'PPP')}
+                📅 {format(new Date(event?.date), 'PPP p')}
               </Typography>
               <Typography variant="body1" gutterBottom>
-                🕒 {format(new Date(event.date), 'p')}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                📍 {event.location}
+                📍 {event?.location}
               </Typography>
             </Box>
 
             <Divider sx={{ my: 2 }} />
 
             <Typography variant="body1" paragraph>
-              {event.description}
+              {event?.description}
             </Typography>
 
             <Box sx={{ mt: 3 }}>
               <Typography variant="h6" gutterBottom>
-                Available Tickets: {event.availableTickets}
+                Available Tickets: {event?.availableTickets}
               </Typography>
             </Box>
 
-            {isAuthenticated ? (
+            {isAuthenticated && event ? (
               <BookTicketForm 
                 eventId={event._id} 
-                ticketPrice={event.ticketPrice}
+                ticketPrice={event.price}
                 availableTickets={event.availableTickets}
               />
             ) : (
-              <Button
-                variant="contained"
-                color="primary"
-                fullWidth
-                onClick={() => navigate('/login')}
-                sx={{ mt: 2 }}
-              >
-                Login to Book Tickets
-              </Button>
+              !isAuthenticated && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  onClick={() => navigate('/login')}
+                  sx={{ mt: 2 }}
+                >
+                  Login to Book Tickets
+                </Button>
+              )
             )}
           </Paper>
         </Grid>

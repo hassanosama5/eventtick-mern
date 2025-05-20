@@ -6,6 +6,7 @@ import { createTheme } from '@mui/material/styles';
 // Components
 import EventList from './components/events/EventList';
 import EventDetails from './components/events/EventDetails';
+import UserBookings from './components/bookings/UserBookings';
 
 // Create a theme instance
 const theme = createTheme({
@@ -39,6 +40,9 @@ function App() {
           {/* Event Routes */}
           <Route path="/events" element={<EventList />} />
           <Route path="/events/:id" element={<EventDetails />} />
+
+          {/* Booking Routes */}
+          <Route path="/my-bookings" element={<UserBookings />} />
           
           {/* Redirect root to events page */}
           <Route path="/" element={<EventList />} />
