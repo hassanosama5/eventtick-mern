@@ -6,7 +6,7 @@ const {
   cancelBooking,
   getUserBookings,
 } = require("../Controllers/bookingsController");
-const { protect, authorize } = require("../Middleware/authMiddleware");
+const { protect, authorize } = require("../Middleware/authorizationMiddleware");
 
 // Apply authentication middleware to all routes
 router.use(protect);

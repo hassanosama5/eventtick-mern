@@ -4,6 +4,34 @@ const Booking = require('../models/Booking');
 // Get all events (public)
 exports.getEvents = async (req, res) => {
     try {
+        console.log('GET /api/v1/events hit');
+        console.log('Authenticated user (req.user):', req.user);
+
+        let filter = { status: 'approved' };
+        // If user is authenticated and is an admin, fetch all events
+        if (req.user && req.user.role === 'admin') {
+            filter = {}; // No filter, get all events
+        }
+
+        console.log('Fetching events with filter:', filter);
+
+        const events = await Event.find(filter)
+            .populate('organizer', 'name email');
+        res.json({
+            success: true,
+            data: events
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false,
+            message: error.message 
+        });
+    }
+};
+
+// Get approved events (public)
+exports.getApprovedEvents = async (req, res) => {
+    try {
         const events = await Event.find({ status: 'approved' })
             .populate('organizer', 'name email');
         res.json({
@@ -156,6 +184,10 @@ exports.deleteEvent = async (req, res) => {
 // Admin: Approve or reject event
 exports.updateEventStatus = async (req, res) => {
     try {
+        console.log('PATCH /api/v1/events/:id/status hit');
+        console.log('Event ID from params:', req.params.id);
+        console.log('New status from body:', req.body.status);
+
         const { status } = req.body;
         if (!['approved', 'declined'].includes(status)) {
             return res.status(400).json({ message: 'Invalid status' });
@@ -167,12 +199,15 @@ exports.updateEventStatus = async (req, res) => {
             { new: true }
         );
 
+        console.log('Result of findByIdAndUpdate:', event);
+
         if (!event) {
             return res.status(404).json({ message: 'Event not found' });
         }
 
         res.json(event);
     } catch (error) {
+        console.error('Error in updateEventStatus:', error);
         res.status(400).json({ message: error.message });
     }
 };
