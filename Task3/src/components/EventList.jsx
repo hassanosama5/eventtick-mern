@@ -103,11 +103,20 @@ const EventList = () => {
             console.log('Raw response from server:', response);
             
             if (response && response.success && Array.isArray(response.data)) {
-                // Filter for approved events only
-                const approvedEvents = response.data.filter(event => event.status === 'approved');
-                console.log('Approved events:', approvedEvents);
-                
-                const formattedEvents = approvedEvents.map(event => ({
+                // Only show events created by the current organizer
+                const storedUser = localStorage.getItem('user');
+                let organizerId = null;
+                if (storedUser) {
+                  try {
+                    organizerId = JSON.parse(storedUser)._id;
+                  } catch (e) {
+                    organizerId = null;
+                  }
+                }
+                const filteredEvents = organizerId
+                  ? response.data.filter(event => event.organizer === organizerId)
+                  : response.data;
+                const formattedEvents = filteredEvents.map(event => ({
                     ...event,
                     _id: event._id || event.id
                 }));
@@ -214,7 +223,9 @@ const EventList = () => {
         
         const matchesCategory = !categoryFilter || event.category === categoryFilter;
         
-        const matchesDate = !dateFilter || new Date(event.date).toDateString() === new Date(dateFilter).toDateString();
+        const matchesDate =
+          !dateFilter ||
+          (event.date && new Date(event.date).toLocaleDateString('en-CA') === dateFilter);
         
         return matchesSearch && matchesCategory && matchesDate;
     });
@@ -249,12 +260,14 @@ const EventList = () => {
                     className="category-filter"
                 >
                     <option value="">All Categories</option>
-                    <option value="music">Music</option>
+                    <option value="conference">Conferencce</option>
+                    <option value="workshop">Workshop</option>
+                    <option value="seminar">Seminar</option>
+                    <option value="concert">Concert</option>
+                    <option value="exhibition">Exhibition</option>
+                    <option value="entertainment">Entertainment</option>
                     <option value="sports">Sports</option>
-                    <option value="technology">Technology</option>
-                    <option value="food">Food</option>
-                    <option value="arts">Arts</option>
-                    <option value="business">Business</option>
+                    <option value="other">Other</option>
                 </select>
 
                 <input

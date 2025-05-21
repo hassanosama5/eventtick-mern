@@ -7,8 +7,12 @@ import axios from 'axios';
 const categoryOptions = [
     { value: 'conference', label: 'Conference' },
     { value: 'workshop', label: 'Workshop' },
-    { value: 'meetup', label: 'Meetup' },
-    { value: 'webinar', label: 'Webinar' },
+    { value: 'seminar', label: 'Seminar' },
+    { value: 'concert', label: 'Concert' },
+    { value: 'exhibition', label: 'Exhibition' },
+    { value: 'entertainment', label: 'Entertainment' },
+    { value: 'sports', label: 'Sports' },
+    { value: 'other', label: 'Other' },
 ];
 
 const EventForm = ({ isEdit = false, onEventCreated }) => {

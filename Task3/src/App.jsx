@@ -4,7 +4,9 @@ import EventList from './components/EventList';
 import EventForm from './components/EventForm';
 import MyEventsPage from './components/MyEventsPage';
 import EventAnalytics from './components/EventAnalytics';
+import EventDetails from './components/EventDetails'; 
 import { AuthProvider } from './context/AuthContext';
+
 import './App.css';
 
 function App() {
@@ -19,6 +21,9 @@ function App() {
                         <Route path="/my-events" element={<MyEventsPage />} />
                         <Route path="/events/:id/analytics" element={<EventAnalytics />} />
                         <Route path="*" element={<Navigate to="/" replace />} />
+                        <Route path="/events/:id" element={<EventDetails />} />
+                        
+                        
                     </Routes>
                 </div>
             </Router>
