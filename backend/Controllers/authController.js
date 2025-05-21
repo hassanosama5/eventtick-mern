@@ -157,16 +157,23 @@ exports.login = async (req, res) => {
     // Generate token
     const token = generateToken(user);
 
-    res.json({
-      success: true,
-      data: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        token,
-      },
-    });
+    res
+      .cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      })
+      .json({
+        success: true,
+        data: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          token,
+        },
+      });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({

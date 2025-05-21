@@ -53,12 +53,15 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/v1/me", {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await axios.get(
+          "http://localhost:5000/api/v1/users/profile",
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
         dispatch({ type: "AUTH_SUCCESS", payload: response.data });
       } catch (err) {
         // Clear invalid credentials
@@ -180,7 +183,12 @@ export function AuthProvider({ children }) {
       if (resetEmail) {
         try {
           await new Promise((resolve) => setTimeout(resolve, 1000)); // Increased delay
-          console.log("DEBUG: Auto-login attempt - email:", resetEmail, "password:", newPassword);
+          console.log(
+            "DEBUG: Auto-login attempt - email:",
+            resetEmail,
+            "password:",
+            newPassword
+          );
           await login(resetEmail, newPassword);
         } catch (loginError) {
           console.error("Auto-login after reset failed:", loginError);

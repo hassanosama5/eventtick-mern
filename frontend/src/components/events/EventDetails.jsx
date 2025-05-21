@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Container,
   Grid,
@@ -10,13 +10,14 @@ import {
   CircularProgress,
   Alert,
   Divider,
-  Chip
-} from '@mui/material';
-import { format } from 'date-fns';
-import axios from 'axios';
-import BookTicketForm from './BookTicketForm';
+  Chip,
+} from "@mui/material";
+import { format } from "date-fns";
+import axios from "axios";
+import BookTicketForm from "./BookTicketForm";
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+// Helper API URL
+//const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const EventDetails = () => {
   const { id } = useParams();
@@ -24,34 +25,55 @@ const EventDetails = () => {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // Consider user authenticated if token exists in localStorage
-  const token = localStorage.getItem('token');
-  const isAuthenticated = !!token;
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Function to fetch event details - reusable
+  // Check if user is authenticated by calling backend auth check endpoint
+  const checkAuthStatus = async () => {
+    try {
+      // Backend should have an endpoint like /api/v1/auth/me that reads cookie and returns user info or 401
+      await axios.get("http://localhost:5000/api/v1/users/profile", {
+        withCredentials: true, // send cookies automatically
+      });
+      setIsAuthenticated(true);
+    } catch (err) {
+      setIsAuthenticated(false);
+    }
+  };
+
   const fetchEventDetails = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}events/${id}`);
+      const response = await axios.get(
+        `http://localhost:5000/api/v1/events/${id}`,
+        {
+          withCredentials: true, // send cookie just in case needed by backend
+        }
+      );
       setEvent(response.data.data);
       setLoading(false);
     } catch (err) {
-      setError('Failed to fetch event details. Please try again later.');
+      setError("Failed to fetch event details. Please try again later.");
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchEventDetails(); // Initial fetch on component mount or id change
+    checkAuthStatus(); // Check if logged in when component mounts
+    fetchEventDetails();
   }, [id]);
 
-  // Callback function to refetch event details after a successful booking
+  // Callback after successful booking to refresh event details
   const handleBookingSuccess = () => {
     fetchEventDetails();
   };
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="60vh"
+      >
         <CircularProgress />
       </Box>
     );
@@ -60,7 +82,9 @@ const EventDetails = () => {
   if (error) {
     return (
       <Container>
-        <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {error}
+        </Alert>
       </Container>
     );
   }
@@ -68,7 +92,9 @@ const EventDetails = () => {
   if (!event) {
     return (
       <Container>
-        <Alert severity="error" sx={{ mt: 2 }}>Event not found</Alert>
+        <Alert severity="error" sx={{ mt: 2 }}>
+          Event not found
+        </Alert>
       </Container>
     );
   }
@@ -83,10 +109,12 @@ const EventDetails = () => {
           <Box
             sx={{
               height: 400,
-              backgroundImage: `url(${event?.imageUrl || '/default-event.jpg'})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              borderRadius: 2
+              backgroundImage: `url(${
+                event?.imageUrl || "/default-event.jpg"
+              })`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              borderRadius: 2,
             }}
           />
         </Grid>
@@ -97,12 +125,8 @@ const EventDetails = () => {
             <Typography variant="h4" component="h1" gutterBottom>
               {event?.title}
             </Typography>
-            
-            <Chip 
-              label={event?.category} 
-              color="primary" 
-              sx={{ mb: 2 }}
-            />
+
+            <Chip label={event?.category} color="primary" sx={{ mb: 2 }} />
 
             <Typography variant="h6" color="primary" gutterBottom>
               ${eventPrice}
@@ -110,7 +134,7 @@ const EventDetails = () => {
 
             <Box sx={{ my: 2 }}>
               <Typography variant="body1" gutterBottom>
-                📅 {format(new Date(event?.date), 'PPP p')}
+                📅 {format(new Date(event?.date), "PPP p")}
               </Typography>
               <Typography variant="body1" gutterBottom>
                 📍 {event?.location}
@@ -130,24 +154,22 @@ const EventDetails = () => {
             </Box>
 
             {isAuthenticated && event ? (
-              <BookTicketForm 
-                eventId={event._id} 
-                ticketPrice={event.price} 
+              <BookTicketForm
+                eventId={event._id}
+                ticketPrice={event.price}
                 availableTickets={event.availableTickets}
-                onBookingSuccess={handleBookingSuccess} // Pass the callback
+                onBookingSuccess={handleBookingSuccess}
               />
             ) : (
-              !isAuthenticated && (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  fullWidth
-                  onClick={() => navigate('/login')}
-                  sx={{ mt: 2 }}
-                >
-                  Login to Book Tickets
-                </Button>
-              )
+              <Button
+                variant="contained"
+                color="primary"
+                fullWidth
+                onClick={() => navigate("/login")}
+                sx={{ mt: 2 }}
+              >
+                Login to Book Tickets
+              </Button>
             )}
           </Paper>
         </Grid>
@@ -156,4 +178,4 @@ const EventDetails = () => {
   );
 };
 
-export default EventDetails; 
+export default EventDetails;

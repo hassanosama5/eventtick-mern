@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Typography,
@@ -17,13 +17,14 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle
-} from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import axios from 'axios';
-import { format } from 'date-fns';
+  DialogTitle,
+} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import axios from "axios";
+import { format } from "date-fns";
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+// Ensure axios sends cookies with every request
+axios.defaults.withCredentials = true;
 
 const UserBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -35,19 +36,16 @@ const UserBookings = () => {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Please log in to view your bookings.');
-        setLoading(false);
-        return;
-      }
-      const response = await axios.get(`${API_BASE_URL}users/bookings`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        `http://localhost:5000/api/v1/users/bookings`
+      );
       setBookings(response.data.data);
       setLoading(false);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch bookings. Please try again later.');
+      setError(
+        err.response?.data?.message ||
+          "Failed to fetch bookings. Please log in."
+      );
       setLoading(false);
     }
   };
@@ -69,22 +67,30 @@ const UserBookings = () => {
   const handleConfirmCancel = async () => {
     if (!bookingToCancel) return;
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API_BASE_URL}bookings/${bookingToCancel}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      // Remove the cancelled booking from the state
-      setBookings(bookings.filter(booking => booking._id !== bookingToCancel));
+      await axios.delete(
+        `http://localhost:5000/api/v1/bookings/${bookingToCancel}`
+      );
+      setBookings(
+        bookings.filter((booking) => booking._id !== bookingToCancel)
+      );
       handleCloseCancelDialog();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to cancel booking. Please try again.');
+      setError(
+        err.response?.data?.message ||
+          "Failed to cancel booking. Please try again."
+      );
       handleCloseCancelDialog();
     }
   };
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="60vh"
+      >
         <CircularProgress />
       </Box>
     );
@@ -93,7 +99,9 @@ const UserBookings = () => {
   if (error) {
     return (
       <Container>
-        <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {error}
+        </Alert>
       </Container>
     );
   }
@@ -115,21 +123,31 @@ const UserBookings = () => {
               <React.Fragment key={booking._id}>
                 <ListItem>
                   <ListItemText
-                    primary={booking.event?.title || 'Event Not Available'}
+                    primary={booking.event?.title || "Event Not Available"}
                     secondary={
-                      <Typography component="span" variant="body2" color="text.secondary">
-                        Date: {booking.event?.date ? format(new Date(booking.event.date), 'PPP p') : 'N/A'} | 
-                        Tickets: {booking.quantity} | 
-                        Total Price: ${booking.totalPrice?.toFixed(2)}
+                      <Typography
+                        component="span"
+                        variant="body2"
+                        color="text.secondary"
+                      >
+                        Date:{" "}
+                        {booking.event?.date
+                          ? format(new Date(booking.event.date), "PPP p")
+                          : "N/A"}{" "}
+                        | Tickets: {booking.quantity} | Total Price: $
+                        {booking.totalPrice?.toFixed(2)}
                       </Typography>
                     }
                   />
                   <ListItemSecondaryAction>
-                    <IconButton 
-                      edge="end" 
-                      aria-label="delete" 
+                    <IconButton
+                      edge="end"
+                      aria-label="delete"
                       onClick={() => handleCancelClick(booking._id)}
-                      disabled={!booking.event || new Date(booking.event.date) < new Date()}
+                      disabled={
+                        !booking.event ||
+                        new Date(booking.event.date) < new Date()
+                      }
                     >
                       <DeleteIcon />
                     </IconButton>
@@ -148,7 +166,9 @@ const UserBookings = () => {
         aria-labelledby="cancel-booking-dialog-title"
         aria-describedby="cancel-booking-dialog-description"
       >
-        <DialogTitle id="cancel-booking-dialog-title">Confirm Cancellation</DialogTitle>
+        <DialogTitle id="cancel-booking-dialog-title">
+          Confirm Cancellation
+        </DialogTitle>
         <DialogContent>
           <DialogContentText id="cancel-booking-dialog-description">
             Are you sure you want to cancel this booking?
@@ -156,11 +176,13 @@ const UserBookings = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseCancelDialog}>No</Button>
-          <Button onClick={handleConfirmCancel} autoFocus>Yes</Button>
+          <Button onClick={handleConfirmCancel} autoFocus>
+            Yes
+          </Button>
         </DialogActions>
       </Dialog>
     </Container>
   );
 };
 
-export default UserBookings; 
+export default UserBookings;

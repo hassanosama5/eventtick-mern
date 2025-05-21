@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   TextField,
@@ -10,14 +10,19 @@ import {
   Grid,
   Paper,
   Divider,
-  Stack
-} from '@mui/material';
-import { Add, Remove } from '@mui/icons-material';
-import axios from 'axios';
+  Stack,
+} from "@mui/material";
+import { Add, Remove } from "@mui/icons-material";
+import axios from "axios";
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+//const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-const BookTicketForm = ({ eventId, ticketPrice, availableTickets, onBookingSuccess }) => {
+const BookTicketForm = ({
+  eventId,
+  ticketPrice,
+  availableTickets,
+  onBookingSuccess,
+}) => {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -29,51 +34,54 @@ const BookTicketForm = ({ eventId, ticketPrice, availableTickets, onBookingSucce
   };
 
   const handleSubmit = async (e) => {
-    console.log('handleSubmit entered');
+    console.log("handleSubmit entered");
     e.preventDefault();
     setLoading(true);
     setError(null);
     setSuccess(false);
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Please log in to book tickets.');
-        setLoading(false);
-        console.log('No token found, exiting handleSubmit');
-        return;
-      }
-
-      console.log('Token found, attempting axios post');
+      // 🧠 Auth is now handled by cookies — no need to check localStorage
       const response = await axios.post(
-        `${API_BASE_URL}bookings`,
+        `http://localhost:5000/api/v1/bookings`,
         {
           eventId,
           quantity,
-          totalPrice: quantity * ticketPrice
+          totalPrice: quantity * ticketPrice,
         },
         {
-          headers: { Authorization: `Bearer ${token}` }
+          withCredentials: true, // Send cookies to the server
         }
       );
 
       if (response.data && response.data.success) {
         setSuccess(true);
-        console.log('Booking successful', response.data);
+        console.log("Booking successful", response.data);
         setQuantity(1);
         if (onBookingSuccess) {
           onBookingSuccess();
         }
       } else {
-        setError(response.data?.message || 'Booking failed.');
-        console.log('Booking failed', response.data);
+        setError(response.data?.message || "Booking failed.");
+        console.log("Booking failed", response.data);
       }
     } catch (err) {
-      console.error('Booking API error:', err.response?.data?.message || err.message);
-      setError(err.response?.data?.message || 'Failed to book tickets. Please try again.');
+      console.error(
+        "Booking API error:",
+        err.response?.data?.message || err.message
+      );
+      // If user is not logged in, the backend should return 401 Unauthorized
+      if (err.response?.status === 401) {
+        setError("Please log in to book tickets.");
+      } else {
+        setError(
+          err.response?.data?.message ||
+            "Failed to book tickets. Please try again."
+        );
+      }
     } finally {
       setLoading(false);
-      console.log('handleSubmit finished');
+      console.log("handleSubmit finished");
     }
   };
 
@@ -84,7 +92,6 @@ const BookTicketForm = ({ eventId, ticketPrice, availableTickets, onBookingSucce
       </Typography>
 
       <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-
         {error && (
           <Alert severity="error" sx={{ mb: 2 }} icon={false}>
             ⚠️ {error}
@@ -101,15 +108,15 @@ const BookTicketForm = ({ eventId, ticketPrice, availableTickets, onBookingSucce
           <Typography variant="subtitle2" color="text.secondary" gutterBottom>
             Available tickets: {availableTickets}
           </Typography>
-          
+
           <Grid container alignItems="center" spacing={2}>
             <Grid item>
-              <IconButton 
+              <IconButton
                 onClick={() => handleQuantityChange(quantity - 1)}
                 disabled={quantity <= 1 || loading}
                 size="small"
                 color="primary"
-                sx={{ border: '1px solid', borderColor: 'divider' }}
+                sx={{ border: "1px solid", borderColor: "divider" }}
               >
                 <Remove />
               </IconButton>
@@ -120,10 +127,10 @@ const BookTicketForm = ({ eventId, ticketPrice, availableTickets, onBookingSucce
                 type="number"
                 value={quantity}
                 onChange={(e) => handleQuantityChange(parseInt(e.target.value))}
-                inputProps={{ 
-                  min: 1, 
+                inputProps={{
+                  min: 1,
                   max: availableTickets,
-                  style: { textAlign: 'center', width: 60 }
+                  style: { textAlign: "center", width: 60 },
                 }}
                 disabled={loading}
               />
@@ -134,7 +141,7 @@ const BookTicketForm = ({ eventId, ticketPrice, availableTickets, onBookingSucce
                 disabled={quantity >= availableTickets || loading}
                 size="small"
                 color="primary"
-                sx={{ border: '1px solid', borderColor: 'divider' }}
+                sx={{ border: "1px solid", borderColor: "divider" }}
               >
                 <Add />
               </IconButton>
@@ -154,9 +161,11 @@ const BookTicketForm = ({ eventId, ticketPrice, availableTickets, onBookingSucce
             <Typography variant="body1">$2.50</Typography>
           </Box>
           <Box display="flex" justifyContent="space-between">
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Total:</Typography>
             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-              ${((quantity * ticketPrice) + (quantity * 2.50)).toFixed(2)}
+              Total:
+            </Typography>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+              ${(quantity * ticketPrice + quantity * 2.5).toFixed(2)}
             </Typography>
           </Box>
         </Stack>
@@ -168,16 +177,16 @@ const BookTicketForm = ({ eventId, ticketPrice, availableTickets, onBookingSucce
           fullWidth
           size="large"
           disabled={loading || quantity < 1 || quantity > availableTickets}
-          sx={{ 
+          sx={{
             py: 1.5,
             fontWeight: 600,
-            '&:disabled': { backgroundColor: 'action.disabledBackground' }
+            "&:disabled": { backgroundColor: "action.disabledBackground" },
           }}
         >
           {loading ? (
             <CircularProgress size={24} color="inherit" />
           ) : (
-            'Confirm Booking'
+            "Confirm Booking"
           )}
         </Button>
 

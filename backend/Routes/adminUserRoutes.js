@@ -5,7 +5,7 @@ const {
   updateUserRole,
   deleteUser,
 } = require("../Controllers/userController");
-const { protect, authorize } = require("../Middleware/authorizationMiddleware");
+const { protect, authorize } = require("../Middleware/authMiddleware");
 
 router.use(protect);
 router.use(authorize("admin"));
@@ -15,4 +15,4 @@ router.get("/:id", getUserById);
 router.put("/:id", updateUserRole);
 router.delete("/:id", deleteUser);
 
-module.exports = router; 
+module.exports = router;
