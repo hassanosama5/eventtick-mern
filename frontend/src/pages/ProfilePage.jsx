@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import "./ProfilePage.css";
 
 export default function ProfilePage() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user, logout, deleteMyAccount, dispatch } = useAuth(); // get dispatch here
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -30,19 +29,29 @@ export default function ProfilePage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add your profile update API call here
-    alert("Profile updated successfully!");
-  };
+    try {
+      const response = await axios.put(
+        "http://localhost:5000/api/v1/users/profile",
+        {
+          name: formData.name,
+          email: formData.email,
+        },
+        { withCredentials: true }
+      );
 
-  const handleDeleteAccount = () => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete your account? This cannot be undone."
-      )
-    ) {
-      // Add account deletion API call here
-      logout();
-      navigate("/");
+      alert("Profile updated successfully!");
+
+      // Dispatch updated user data to update global context state
+      dispatch({ type: "AUTH_SUCCESS", payload: response.data.data });
+
+      // Update local form data (optional, usually synced automatically from context)
+      setFormData((prev) => ({
+        ...prev,
+        name: response.data.data.name,
+        email: response.data.data.email,
+      }));
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to update profile");
     }
   };
 
@@ -54,11 +63,13 @@ export default function ProfilePage() {
     );
   }
 
+  const firstInitial = user?.name?.charAt(0)?.toUpperCase() || "?";
+
   return (
     <div className="profile-container">
       <div className="profile-header">
         <h1>My Profile</h1>
-        <div className="avatar">{user.name.charAt(0).toUpperCase()}</div>
+        <div className="avatar">{firstInitial}</div>
       </div>
 
       <form onSubmit={handleSubmit} className="profile-form">
@@ -114,7 +125,7 @@ export default function ProfilePage() {
 
       <div className="danger-zone">
         <h3>Danger Zone</h3>
-        <button className="btn delete-btn" onClick={handleDeleteAccount}>
+        <button className="btn delete-btn" onClick={deleteMyAccount}>
           Delete Account
         </button>
         <p className="warning-text">

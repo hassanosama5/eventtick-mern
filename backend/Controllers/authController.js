@@ -61,7 +61,7 @@ exports.register = async (req, res) => {
       res.cookie("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "Strict",
+        sameSite: "Lax", //Strict
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       });
 
@@ -103,7 +103,7 @@ exports.login = async (req, res) => {
 
     // Find user and explicitly select password
     console.log("Finding user with email:", email);
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email }).select("+password");
     console.log("User found:", !!user);
 
     if (!user) {
@@ -133,6 +133,13 @@ exports.login = async (req, res) => {
 
     // Generate token
     const token = generateToken(user);
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Lax", // khaleeha Strict
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
 
     res.json({
       success: true,

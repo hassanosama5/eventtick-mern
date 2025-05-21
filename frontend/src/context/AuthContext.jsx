@@ -53,15 +53,18 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/v1/me", {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await axios.get(
+          "http://localhost:5000/api/v1/users/profile",
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
         dispatch({ type: "AUTH_SUCCESS", payload: response.data });
       } catch (err) {
-        // Clear invalid credentials
+        // Clear invalid credentials cookie
         document.cookie =
           "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         dispatch({ type: "LOGOUT" });
@@ -75,17 +78,33 @@ export function AuthProvider({ children }) {
   const register = async (name, email, password, role) => {
     dispatch({ type: "REGISTER_START" });
     try {
-      const response = await axios.post(
+      // Step 1: Register the user
+      await axios.post(
         "http://localhost:5000/api/v1/register",
+        { name, email, password, role },
+        { withCredentials: true }
+      );
+
+      // Optional delay (can remove if not needed)
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Step 2: Fetch the full user info via /profile endpoint
+      const response = await axios.get(
+        "http://localhost:5000/api/v1/users/profile",
         {
-          name,
-          email,
-          password,
-          role,
+          withCredentials: true,
         }
       );
-      dispatch({ type: "AUTH_SUCCESS", payload: response.data });
+
+      console.log(response.data);
+
+      // Step 3: Dispatch success with full user data
+      dispatch({ type: "AUTH_SUCCESS", payload: response.data.data });
+
+      // Navigate to home or dashboard
+      navigate("/");
     } catch (err) {
+      console.error(err);
       dispatch({
         type: "AUTH_FAILURE",
         payload: err.response?.data?.message || "Registration failed",
@@ -180,7 +199,12 @@ export function AuthProvider({ children }) {
       if (resetEmail) {
         try {
           await new Promise((resolve) => setTimeout(resolve, 1000)); // Increased delay
-          console.log("DEBUG: Auto-login attempt - email:", resetEmail, "password:", newPassword);
+          console.log(
+            "DEBUG: Auto-login attempt - email:",
+            resetEmail,
+            "password:",
+            newPassword
+          );
           await login(resetEmail, newPassword);
         } catch (loginError) {
           console.error("Auto-login after reset failed:", loginError);
@@ -227,10 +251,37 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const deleteMyAccount = async () => {
+    try {
+      const confirmed = window.confirm(
+        "Are you sure you want to delete your account? This cannot be undone."
+      );
+
+      if (!confirmed) return;
+
+      await axios.delete("http://localhost:5000/api/v1/users/me", {
+        withCredentials: true, // or include token in headers if you're using Authorization header
+      });
+
+      // Clear frontend state
+      document.cookie = "token=; Max-Age=0";
+      localStorage.removeItem("user");
+      dispatch({ type: "LOGOUT" });
+
+      // Navigate home
+      navigate("/");
+      alert("Account deleted successfully.");
+    } catch (error) {
+      console.error("Account deletion failed:", error);
+      alert("Failed to delete your account. Please try again.");
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
         ...state,
+        dispatch,
         register,
         login,
         logout,
@@ -241,6 +292,7 @@ export function AuthProvider({ children }) {
         setTempToken, // <-- exposed in case you want to clear manually
         resetEmail, // Expose if needed
         setResetEmail, // Expose if needed
+        deleteMyAccount,
       }}
     >
       {children}

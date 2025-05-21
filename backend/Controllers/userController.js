@@ -239,16 +239,9 @@ exports.deleteUser = async (req, res) => {
 };
 
 // User self-delete account
+// ✅ No need to compare IDs since you're using the token to identify the user
 exports.deleteMyAccount = async (req, res) => {
   try {
-    // Verify the user is deleting their own account
-    if (req.params.id !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: "You can only delete your own account",
-      });
-    }
-
     const user = await User.findByIdAndDelete(req.user.id);
     if (!user) {
       return res.status(404).json({
