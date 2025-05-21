@@ -13,27 +13,12 @@ const eventSchema = new mongoose.Schema({
     },
     date: { 
         type: Date, 
-        required: true,
-        validate: {
-            validator: function(value) {
-                // Only validate future date when creating a new event
-                if (this.isNew) {
-                    return value > new Date();
-                }
-                return true;
-            },
-            message: 'Event date must be in the future'
-        }
+        required: true
     },
     location: { 
         type: String, 
         required: true,
         trim: true
-    },
-    category: { 
-        type: String,
-        trim: true,
-        enum: ['conference', 'workshop', 'seminar', 'concert', 'exhibition', 'other']
     },
     image: { 
         type: String,
@@ -56,18 +41,11 @@ const eventSchema = new mongoose.Schema({
     },
     availableTickets: { 
         type: Number, 
-        required: true,
-        validate: {
-            validator: function(value) {
-                return value <= this.totalTickets;
-            },
-            message: 'Available tickets cannot exceed total tickets'
-        }
+        required: true
     },
     organizer: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'User', 
-        required: true 
+        type: String,
+        required: true
     },
     status: {
         type: String,
@@ -75,11 +53,21 @@ const eventSchema = new mongoose.Schema({
         default: 'pending',
         required: true
     },
-    createdAt: { 
-        type: Date, 
-        default: Date.now 
+    category: {
+        type: String,
+        enum: [
+            'conference',
+            'workshop',
+            'seminar',
+            'concert',
+            'exhibition',
+            'entertainment',
+            'sports',
+            'other'
+        ],
+        required: true
     }
-});
+}, { timestamps: true });
 
 // Pre-save middleware to set initial availableTickets if not provided
 eventSchema.pre('save', function(next) {
