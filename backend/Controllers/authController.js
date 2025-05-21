@@ -103,7 +103,7 @@ exports.login = async (req, res) => {
 
     // Find user and explicitly select password
     console.log("Finding user with email:", email);
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select('+password');
     console.log("User found:", !!user);
 
     if (!user) {
@@ -115,7 +115,7 @@ exports.login = async (req, res) => {
     }
 
     console.log("Stored hashed password:", user.password);
-    console.log("Attempting password comparison");
+    console.log("Attempting password comparison with:", password);
 
     // Verify password using bcrypt directly
     const isMatch = await bcrypt.compare(password, user.password);
@@ -254,6 +254,7 @@ exports.verifyOTP = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   try {
     const { newPassword } = req.body;
+    console.log("Password reset attempt for user:", req.user.id);
 
     // Basic validation (minimum 6 characters)
     if (!newPassword || newPassword.length < 6) {
@@ -266,6 +267,7 @@ exports.resetPassword = async (req, res) => {
     // Hash the new password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
+    console.log("New password hashed successfully");
 
     // Update user document
     const updatedUser = await User.findByIdAndUpdate(
@@ -282,11 +284,14 @@ exports.resetPassword = async (req, res) => {
 
     // Verify update was successful
     if (!updatedUser) {
+      console.log("User not found during password reset");
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
     }
+
+    console.log("Password reset successful for user:", updatedUser.email);
 
     res.json({
       success: true,

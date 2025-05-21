@@ -11,7 +11,10 @@ export default function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await login(email.trim(), password.trim()); // Added trim() to remove whitespace
+      const trimmedEmail = email.trim();
+      const trimmedPassword = password.trim();
+      console.log("Attempting manual login with:", { email: trimmedEmail, password: trimmedPassword });
+      await login(trimmedEmail, trimmedPassword); // Added trim() to remove whitespace
       navigate("/"); // Explicit navigation after successful login
     } catch (err) {
       console.error("Login error:", err);

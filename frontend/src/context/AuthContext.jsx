@@ -100,17 +100,17 @@ export function AuthProvider({ children }) {
     try {
       const response = await axios.post(
         "http://localhost:5000/api/v1/login",
-        { email, password }
-        // {
-        //   withCredentials: true,
-        //   headers: {
-        //     "Content-Type": "application/json",
-        //   },
-        // }
+        { email, password },
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
 
       // Store token in memory (not localStorage for security)
-      dispatch({ type: "AUTH_SUCCESS", payload: response.data.user });
+      dispatch({ type: "AUTH_SUCCESS", payload: response.data.data });
       navigate("/");
     } catch (err) {
       console.error("Login error:", err.response?.data);
@@ -160,8 +160,8 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const resetPassword = async (newPassword) => {
-    dispatch({ type: "FORGOT_PASSWORD_START" }); // Use loading state
+  const resetPassword = async (email, newPassword) => {
+    dispatch({ type: "FORGOT_PASSWORD_START" });
     try {
       const response = await axios.put(
         "http://localhost:5000/api/v1/reset-password",
@@ -176,17 +176,19 @@ export function AuthProvider({ children }) {
       // Clear the temp token after successful reset
       setTempToken(null);
 
-      // Attempt automatic login
+      // Attempt automatic login with better error handling
       if (resetEmail) {
-        await new Promise((resolve) => setTimeout(resolve, 300)); // Short delay
-        await login(resetEmail, newPassword);
+        try {
+          await new Promise((resolve) => setTimeout(resolve, 1000)); // Increased delay
+          console.log("DEBUG: Auto-login attempt - email:", resetEmail, "password:", newPassword);
+          await login(resetEmail, newPassword);
+        } catch (loginError) {
+          console.error("Auto-login after reset failed:", loginError);
+          // Don't throw here, just log the error and let the user try logging in manually
+        }
       }
-      // Dispatch success action
-      dispatch({ type: "FORGOT_PASSWORD_SUCCESS" });
-      // IMPORTANT: Wait for the operation to complete
-      console.log("Reset response:", response.data);
 
-      // Return success message or data
+      dispatch({ type: "FORGOT_PASSWORD_SUCCESS" });
       return response.data;
     } catch (err) {
       const errorMsg = err.response?.data?.message || "Reset failed";
