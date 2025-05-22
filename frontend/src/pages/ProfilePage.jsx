@@ -58,7 +58,9 @@ export default function ProfilePage() {
     <div className="profile-container">
       <div className="profile-header">
         <h1>My Profile</h1>
-        <div className="avatar">{user.name.charAt(0).toUpperCase()}</div>
+        <div className="avatar">
+          {user?.name ? user.name.charAt(0).toUpperCase() : "?"}
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="profile-form">
