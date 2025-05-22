@@ -1,27 +1,27 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { eventService } from './services/api';
-import './CreateEvent.css';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { eventService } from "../services/api";
+import "./CreateEvent.css";
 
 export default function CreateEvent() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    date: '',
-    location: '',
-    price: '',
-    totalTickets: '',
-    category: ''
+    title: "",
+    description: "",
+    date: "",
+    location: "",
+    price: "",
+    totalTickets: "",
+    category: "",
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({
+    setFormData((prevState) => ({
       ...prevState,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -35,17 +35,20 @@ export default function CreateEvent() {
       const eventData = {
         ...formData,
         price: Number(formData.price),
-        totalTickets: Number(formData.totalTickets)
+        totalTickets: Number(formData.totalTickets),
       };
 
       const response = await eventService.createEvent(eventData);
-      console.log('Event created:', response);
-      
+      console.log("Event created:", response);
+
       // Redirect to events list
-      navigate('/');
+      navigate("/");
     } catch (err) {
-      console.error('Error creating event:', err);
-      setError(err.response?.data?.message || 'Failed to create event. Please try again.');
+      console.error("Error creating event:", err);
+      setError(
+        err.response?.data?.message ||
+          "Failed to create event. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -54,12 +57,8 @@ export default function CreateEvent() {
   return (
     <div className="create-event-container">
       <h1>Create New Event</h1>
-      
-      {error && (
-        <div className="error-message">
-          {error}
-        </div>
-      )}
+
+      {error && <div className="error-message">{error}</div>}
 
       <form onSubmit={handleSubmit} className="create-event-form">
         <div className="form-group">
@@ -165,22 +164,18 @@ export default function CreateEvent() {
         </div>
 
         <div className="form-actions">
-          <button 
-            type="button" 
-            onClick={() => navigate('/')}
+          <button
+            type="button"
+            onClick={() => navigate("/")}
             className="cancel-btn"
           >
             Cancel
           </button>
-          <button 
-            type="submit" 
-            className="submit-btn"
-            disabled={loading}
-          >
-            {loading ? 'Creating...' : 'Create Event'}
+          <button type="submit" className="submit-btn" disabled={loading}>
+            {loading ? "Creating..." : "Create Event"}
           </button>
         </div>
       </form>
     </div>
   );
-} 
+}
