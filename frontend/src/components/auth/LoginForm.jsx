@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
+import Toast from "../Toast";
 import "./AuthForms.css"; // Add this import
 
 export default function LoginForm() {
@@ -8,6 +9,7 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const { login, isLoading, error } = useAuth();
   const navigate = useNavigate();
+  const [toast, setToast] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -15,8 +17,10 @@ export default function LoginForm() {
       const trimmedEmail = email.trim();
       const trimmedPassword = password.trim();
       await login(trimmedEmail, trimmedPassword);
-      navigate("/");
+      setToast({ message: "Login successful! Welcome back.", type: "success" });
+      setTimeout(() => navigate("/"), 1200);
     } catch (err) {
+      setToast({ message: "Login failed. Please check your credentials.", type: "error" });
       console.error("Login error:", err);
     }
   };
@@ -24,8 +28,9 @@ export default function LoginForm() {
   return (
     <div className="auth-form-container">
       <h2>Login</h2>
-      {error && <div className="error-message">{error}</div>}
-
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+      )}
       <form onSubmit={handleSubmit} className="auth-form">
         <div className="form-group">
           <label htmlFor="email">Email</label>
@@ -38,7 +43,6 @@ export default function LoginForm() {
             autoComplete="username"
           />
         </div>
-
         <div className="form-group">
           <label htmlFor="password">Password</label>
           <input
@@ -50,12 +54,10 @@ export default function LoginForm() {
             autoComplete="current-password"
           />
         </div>
-
         <button type="submit" disabled={isLoading} className="submit-btn">
           {isLoading ? "Logging in..." : "Login"}
         </button>
       </form>
-
       <div className="auth-links">
         <button
           type="button"

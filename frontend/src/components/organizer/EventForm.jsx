@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { eventService } from "../../services/api";
 import "./EventForm.css";
 import axios from "axios";
+import Toast from "../Toast";
+import Loader from "../Loader";
 
 const categoryOptions = [
   { value: "Conference", label: "Conference" },
@@ -29,6 +31,7 @@ const EventForm = ({ isEdit = false, onEventCreated }) => {
     totalTickets: "",
     category: "Conference",
   });
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     if (isEdit && id) {
@@ -79,7 +82,6 @@ const EventForm = ({ isEdit = false, onEventCreated }) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
     try {
       const eventData = {
         title: formData.title.trim(),
@@ -89,41 +91,40 @@ const EventForm = ({ isEdit = false, onEventCreated }) => {
         price: parseFloat(formData.price),
         totalTickets: parseInt(formData.totalTickets, 10),
         category: formData.category,
-        // **No organizer or userId field sent here!**
       };
-
       let response;
       if (isEdit && id) {
         response = await eventService.updateEvent(id, eventData);
       } else {
         response = await eventService.createEvent(eventData);
       }
-
       if (response.success) {
-        navigate("/Organizer/events");
+        setToast({ message: isEdit ? "Event updated successfully!" : "Event created successfully!", type: "success" });
+        setTimeout(() => navigate("/organizer/events"), 1200);
         if (onEventCreated) onEventCreated();
       } else {
-        setError(
-          response.message || `Failed to ${isEdit ? "update" : "create"} event`
-        );
+        setToast({ message: response.message || `Failed to ${isEdit ? "update" : "create"} event`, type: "error" });
+        setError(response.message || `Failed to ${isEdit ? "update" : "create"} event`);
       }
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          `Failed to ${isEdit ? "update" : "create"} event`
-      );
+      setToast({ message: err.response?.data?.message || `Failed to ${isEdit ? "update" : "create"} event`, type: "error" });
+      setError(err.response?.data?.message || `Failed to ${isEdit ? "update" : "create"} event`);
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading && isEdit) return <div className="loading">Loading...</div>;
+  if (loading && isEdit) return <Loader size={60} />;
 
   return (
     <div className="event-form-container">
       <h2>{isEdit ? "Edit Event" : "Create New Event"}</h2>
 
       {error && <div className="error-message">{error}</div>}
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+      )}
 
       <form onSubmit={handleSubmit} className="event-form">
         <div className="form-group">

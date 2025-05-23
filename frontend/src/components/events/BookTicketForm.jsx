@@ -14,6 +14,8 @@ import {
 } from "@mui/material";
 import { Add, Remove } from "@mui/icons-material";
 import axios from "axios";
+import Toast from "../Toast";
+import Loader from "../Loader";
 
 //const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -27,6 +29,7 @@ const BookTicketForm = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [toast, setToast] = useState(null);
 
   const handleQuantityChange = (newQuantity) => {
     const value = Math.max(1, Math.min(availableTickets, newQuantity));
@@ -56,14 +59,14 @@ const BookTicketForm = ({
 
       if (response.data && response.data.success) {
         setSuccess(true);
-        console.log("Booking successful", response.data);
+        setToast({ message: "Tickets booked successfully!", type: "success" });
         setQuantity(1);
         if (onBookingSuccess) {
           onBookingSuccess();
         }
       } else {
         setError(response.data?.message || "Booking failed.");
-        console.log("Booking failed", response.data);
+        setToast({ message: response.data?.message || "Booking failed.", type: "error" });
       }
     } catch (err) {
       console.error(
@@ -73,11 +76,13 @@ const BookTicketForm = ({
       // If user is not logged in, the backend should return 401 Unauthorized
       if (err.response?.status === 401) {
         setError("Please log in to book tickets.");
+        setToast({ message: "Please log in to book tickets.", type: "error" });
       } else {
         setError(
           err.response?.data?.message ||
             "Failed to book tickets. Please try again."
         );
+        setToast({ message: err.response?.data?.message || "Failed to book tickets. Please try again.", type: "error" });
       }
     } finally {
       setLoading(false);
@@ -184,7 +189,7 @@ const BookTicketForm = ({
           }}
         >
           {loading ? (
-            <CircularProgress size={24} color="inherit" />
+            <Loader size={24} />
           ) : (
             "Confirm Booking"
           )}
@@ -194,6 +199,10 @@ const BookTicketForm = ({
           Secure checkout · Cancel up to 24 hours before event
         </Typography>
       </Box>
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+      )}
     </Paper>
   );
 };

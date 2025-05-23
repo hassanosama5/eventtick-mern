@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
+import Toast from "../Toast";
 import "./AuthForms.css"; // Shared auth form styles
 
 export default function RegisterForm() {
@@ -14,6 +15,7 @@ export default function RegisterForm() {
 
   const { register, isLoading, error } = useAuth();
   const navigate = useNavigate();
+  const [toast, setToast] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -25,7 +27,7 @@ export default function RegisterForm() {
 
     // Client-side validation
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match!");
+      setToast({ message: "Passwords don't match!", type: "error" });
       return;
     }
 
@@ -36,18 +38,19 @@ export default function RegisterForm() {
         formData.password,
         formData.role
       );
-      navigate("/"); // Redirect after successful registration
-      // eslint-disable-next-line no-unused-vars
+      setToast({ message: "Registration successful! Welcome to EventTick.", type: "success" });
+      setTimeout(() => navigate("/login"), 1200);
     } catch (err) {
-      // Error is already handled in AuthContext
+      setToast({ message: error || "Registration failed. Please try again.", type: "error" });
     }
   };
 
   return (
     <div className="auth-form-container">
       <h2>Create Account</h2>
-      {error && <div className="error-message">{error}</div>}
-
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+      )}
       <form onSubmit={handleSubmit} className="auth-form">
         <div className="form-group">
           <label htmlFor="name">Full Name</label>
@@ -61,7 +64,6 @@ export default function RegisterForm() {
             minLength={3}
           />
         </div>
-
         <div className="form-group">
           <label htmlFor="email">Email</label>
           <input
@@ -73,7 +75,6 @@ export default function RegisterForm() {
             required
           />
         </div>
-
         <div className="form-group">
           <label htmlFor="password">Password</label>
           <input
@@ -86,7 +87,6 @@ export default function RegisterForm() {
             minLength={6}
           />
         </div>
-
         <div className="form-group">
           <label htmlFor="confirmPassword">Confirm Password</label>
           <input
@@ -98,7 +98,6 @@ export default function RegisterForm() {
             required
           />
         </div>
-
         <div className="form-group">
           <label htmlFor="role">Account Type</label>
           <select
@@ -111,12 +110,10 @@ export default function RegisterForm() {
             <option value="organizer">Event Organizer</option>
           </select>
         </div>
-
         <button type="submit" disabled={isLoading} className="submit-btn">
           {isLoading ? "Creating Account..." : "Register"}
         </button>
       </form>
-
       <div className="auth-links">
         Already have an account? <Link to="/login">Sign In</Link>
       </div>

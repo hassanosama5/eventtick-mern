@@ -1,0 +1,26 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ main, feat/* ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./SEProject-2/frontend
+      - name: Run tests
+        run: npm test -- --watchAll=false
+        working-directory: ./SEProject-2/frontend
+      - name: Build
+        run: npm run build
+        working-directory: ./SEProject-2/frontend 

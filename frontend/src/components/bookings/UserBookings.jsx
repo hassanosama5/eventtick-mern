@@ -22,6 +22,8 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import axios from "axios";
 import { format } from "date-fns";
+import Toast from "../Toast";
+import Loader from "../Loader";
 
 // Ensure axios sends cookies with every request
 axios.defaults.withCredentials = true;
@@ -32,6 +34,7 @@ const UserBookings = () => {
   const [error, setError] = useState(null);
   const [openCancelDialog, setOpenCancelDialog] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState(null);
+  const [toast, setToast] = useState(null);
 
   const fetchBookings = async () => {
     try {
@@ -73,8 +76,10 @@ const UserBookings = () => {
       setBookings(
         bookings.filter((booking) => booking._id !== bookingToCancel)
       );
+      setToast({ message: "Booking cancelled successfully.", type: "success" });
       handleCloseCancelDialog();
     } catch (err) {
+      setToast({ message: err.response?.data?.message || "Failed to cancel booking. Please try again.", type: "error" });
       setError(
         err.response?.data?.message ||
           "Failed to cancel booking. Please try again."
@@ -91,7 +96,7 @@ const UserBookings = () => {
         alignItems="center"
         minHeight="60vh"
       >
-        <CircularProgress />
+        <Loader size={60} />
       </Box>
     );
   }
@@ -181,6 +186,10 @@ const UserBookings = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+      )}
     </Container>
   );
 };
