@@ -63,6 +63,7 @@ export function AuthProvider({ children }) {
           }
         );
         dispatch({ type: "AUTH_SUCCESS", payload: response.data });
+        // eslint-disable-next-line no-unused-vars
       } catch (err) {
         // Clear invalid credentials
         document.cookie =

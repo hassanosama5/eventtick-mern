@@ -8,17 +8,19 @@ const {
   updateEventStatus,
   getEventAnalytics,
   getApprovedEvents,
+  getOrganizerEvents,
 } = require("../Controllers/eventsController");
 const { protect, authorize } = require("../Middleware/authMiddleware");
 
 // Public routes
 router.get("/approved", getApprovedEvents);
-router.get("/:id", getEventById);
 
 // Protected routes
 router.use(protect);
 
 // Organizer routes
+router.get("/organizer", authorize("organizer"), getOrganizerEvents);
+router.get("/:id", getEventById); // public route
 router.post("/", authorize("organizer"), createEvent);
 router.put("/:id", authorize("organizer", "admin"), updateEvent);
 router.delete("/:id", authorize("organizer", "admin"), deleteEvent);
