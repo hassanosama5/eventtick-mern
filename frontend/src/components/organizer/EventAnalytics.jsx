@@ -98,21 +98,21 @@ const EventAnalytics = () => {
           elevation={1}
         >
           <Typography variant="subtitle2">Total Tickets</Typography>
-          <Typography variant="h6">{event.totalTickets}</Typography>
+          <Typography variant="h6">{analytics.totalTickets}</Typography>
         </Paper>
         <Paper
           sx={{ p: 1.5, minWidth: 120, textAlign: "center" }}
           elevation={1}
         >
           <Typography variant="subtitle2">Tickets Sold</Typography>
-          <Typography variant="h6">{analytics.ticketsSold}</Typography>
+          <Typography variant="h6">{analytics.bookedTickets}</Typography>
         </Paper>
         <Paper
           sx={{ p: 1.5, minWidth: 120, textAlign: "center" }}
           elevation={1}
         >
           <Typography variant="subtitle2">Revenue</Typography>
-          <Typography variant="h6">${analytics.totalRevenue}</Typography>
+          <Typography variant="h6">${analytics.revenue}</Typography>
         </Paper>
       </Box>
 
