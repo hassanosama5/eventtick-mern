@@ -1,5 +1,8 @@
+/* eslint-disable no-unused-vars */
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { Link } from "react-router-dom";
+import "./AuthForms.css"; // Add this import
 
 export default function ForgotPassword() {
   const [step, setStep] = useState(1);
@@ -9,7 +12,6 @@ export default function ForgotPassword() {
   const { forgotPassword, verifyOTP, resetPassword, isLoading, error } =
     useAuth();
 
-  // Step 1: Request OTP
   const handleSendOTP = async (e) => {
     e.preventDefault();
     try {
@@ -21,78 +23,88 @@ export default function ForgotPassword() {
     }
   };
 
-  // Step 2: Verify OTP
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
     try {
       await verifyOTP(email, otp);
       setStep(3);
-      // eslint-disable-next-line no-unused-vars
     } catch (err) {
       // Error handled in AuthContext
     }
   };
 
-  // Step 3: Reset Password
   const handleResetPassword = async (e) => {
     e.preventDefault();
     try {
       await resetPassword(email, newPassword);
       alert("Password reset successfully!");
-      // eslint-disable-next-line no-unused-vars
     } catch (err) {
       // Error handled in AuthContext
     }
   };
 
   return (
-    <div>
+    <div className="auth-form-container">
+      <h2>Password Recovery</h2>
+      {error && <div className="error-message">{error}</div>}
+
       {step === 1 && (
-        <form onSubmit={handleSendOTP}>
-          <h3>Step 1: Enter Email</h3>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <button type="submit" disabled={isLoading}>
-            Send OTP
+        <form onSubmit={handleSendOTP} className="auth-form">
+          <div className="form-group">
+            <label htmlFor="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <button type="submit" disabled={isLoading} className="submit-btn">
+            {isLoading ? "Sending..." : "Send OTP"}
           </button>
         </form>
       )}
 
       {step === 2 && (
-        <form onSubmit={handleVerifyOTP}>
-          <h3>Step 2: Enter OTP</h3>
-          <input
-            type="text"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-            required
-          />
-          <button type="submit" disabled={isLoading}>
-            Verify OTP
+        <form onSubmit={handleVerifyOTP} className="auth-form">
+          <div className="form-group">
+            <label htmlFor="otp">OTP Code</label>
+            <input
+              type="text"
+              id="otp"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              required
+            />
+          </div>
+          <button type="submit" disabled={isLoading} className="submit-btn">
+            {isLoading ? "Verifying..." : "Verify OTP"}
           </button>
         </form>
       )}
 
       {step === 3 && (
-        <form onSubmit={handleResetPassword}>
-          <h3>Step 3: New Password</h3>
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            required
-          />
-          <button type="submit" disabled={isLoading}>
-            Reset Password
+        <form onSubmit={handleResetPassword} className="auth-form">
+          <div className="form-group">
+            <label htmlFor="newPassword">New Password</label>
+            <input
+              type="password"
+              id="newPassword"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+            />
+          </div>
+          <button type="submit" disabled={isLoading} className="submit-btn">
+            {isLoading ? "Resetting..." : "Reset Password"}
           </button>
         </form>
       )}
 
-      {error && <p className="error">{error}</p>}
+      <div className="auth-links">
+        <Link to="/login">Back to Login</Link>
+      </div>
     </div>
   );
 }
