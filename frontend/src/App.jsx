@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, Link } from "react-router-dom";
+import { Routes, Route, Navigate, Link } from "react-router-dom";
 import { ThemeProvider, CssBaseline, Box, Button } from "@mui/material";
 import { createTheme } from "@mui/material/styles";
 import { useAuth } from "./context/AuthContext";
@@ -121,67 +121,65 @@ function RoleBasedNavigation() {
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <Navbar />
-          <RoleBasedNavigation />
+    <AuthProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Navbar />
+        <RoleBasedNavigation />
 
-          <main className="main-content">
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<HomePage />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms-of-service" element={<TermsOfService />} />
-              <Route path="/login" element={<LoginForm />} />
-              <Route path="/register" element={<RegisterForm />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/unauthorized" element={<Unauthorized />} />
-              <Route path="/events" element={<PublicEventList />} />
-              <Route path="/events/:id" element={<PublicEventDetails />} />
+        <main className="main-content">
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/login" element={<LoginForm />} />
+            <Route path="/register" element={<RegisterForm />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/unauthorized" element={<Unauthorized />} />
+            <Route path="/events" element={<PublicEventList />} />
+            <Route path="/events/:id" element={<PublicEventDetails />} />
 
-              {/* Authenticated User Routes */}
-              <Route element={<PrivateRoute />}>
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/my-bookings" element={<UserBookings />} />
-              </Route>
+            {/* Authenticated User Routes */}
+            <Route element={<PrivateRoute />}>
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/my-bookings" element={<UserBookings />} />
+            </Route>
 
-              {/* Organizer Routes */}
+            {/* Organizer Routes */}
+            <Route
+              element={<PrivateRoute allowedRoles={["organizer", "admin"]} />}
+            >
               <Route
-                element={<PrivateRoute allowedRoles={["organizer", "admin"]} />}
-              >
-                <Route
-                  path="/organizer/events"
-                  element={<OrganizerEventList />}
-                />
-                <Route path="/organizer/events/create" element={<EventForm />} />
-                <Route
-                  path="/organizer/events/edit/:id"
-                  element={<EventForm isEdit={true} />}
-                />
-                <Route
-                  path="/organizer/events/:id/analytics"
-                  element={<EventAnalytics />}
-                />
-              </Route>
+                path="/organizer/events"
+                element={<OrganizerEventList />}
+              />
+              <Route path="/organizer/events/create" element={<EventForm />} />
+              <Route
+                path="/organizer/events/edit/:id"
+                element={<EventForm isEdit={true} />}
+              />
+              <Route
+                path="/organizer/events/:id/analytics"
+                element={<EventAnalytics />}
+              />
+            </Route>
 
-              {/* Admin-only Routes */}
-              <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
-                <Route path="/admin/events" element={<AdminEvents />} />
-                <Route path="/admin/users" element={<AdminUsersPage />} />
-              </Route>
+            {/* Admin-only Routes */}
+            <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
+              <Route path="/admin/events" element={<AdminEvents />} />
+              <Route path="/admin/users" element={<AdminUsersPage />} />
+            </Route>
 
-              {/* Fallback */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
-          <Footer />
-        </ThemeProvider>
-      </AuthProvider>
-    </Router>
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
+        <Footer />
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 
