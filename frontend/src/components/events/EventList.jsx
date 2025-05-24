@@ -25,8 +25,6 @@ import getDay from "date-fns/getDay";
 import enUS from "date-fns/locale/en-US";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
-//const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-
 const locales = { "en-US": enUS };
 const localizer = dateFnsLocalizer({
   format,
@@ -43,7 +41,7 @@ const EventList = ({ events: initialEvents }) => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [viewMode, setViewMode] = useState("grid"); // grid, list, calendar
+  const [viewMode, setViewMode] = useState("grid");
 
   const navigate = useNavigate();
 
@@ -60,7 +58,7 @@ const EventList = ({ events: initialEvents }) => {
     const fetchEvents = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/v1/events/approved`,
+          "http://localhost:5000/api/v1/events/approved",
           {
             withCredentials: true,
           }
@@ -108,9 +106,9 @@ const EventList = ({ events: initialEvents }) => {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Grid container spacing={3}>
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+          {[...Array(6)].map((_, i) => (
             <Grid item key={i} xs={12} sm={6} md={4}>
-              <Paper elevation={3} sx={{ p: 2 }}>
+              <Paper elevation={3} sx={{ p: 2, height: "100%" }}>
                 <Skeleton variant="rectangular" height={140} />
                 <Box sx={{ pt: 2 }}>
                   <Skeleton width="60%" />
@@ -145,10 +143,7 @@ const EventList = ({ events: initialEvents }) => {
           mb: 4,
         }}
       >
-        <Typography variant="h4" component="h1">
-          Upcoming Events
-        </Typography>
-
+        <Typography variant="h4">Upcoming Events</Typography>
         <ButtonGroup variant="contained" size="small">
           <Button
             onClick={() => setViewMode("grid")}
@@ -171,36 +166,33 @@ const EventList = ({ events: initialEvents }) => {
         </ButtonGroup>
       </Box>
 
-      <Box sx={{ mb: 4 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Search events"
-              variant="outlined"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by event name or location"
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              select
-              label="Category"
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              variant="outlined"
-            >
-              {categories.map((category) => (
-                <MenuItem key={category} value={category}>
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
+      <Grid container spacing={2} sx={{ mb: 4 }}>
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            label="Search events"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by event name or location"
+          />
         </Grid>
-      </Box>
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            select
+            label="Category"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+          >
+            <MenuItem value="all">All</MenuItem>
+            {categories.map((category) => (
+              <MenuItem key={category} value={category}>
+                {category.charAt(0).toUpperCase() + category.slice(1)}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Grid>
+      </Grid>
 
       {filteredEvents.length === 0 ? (
         <Box sx={{ textAlign: "center", py: 6 }}>
@@ -214,47 +206,31 @@ const EventList = ({ events: initialEvents }) => {
             Try adjusting your filters or search terms
           </Typography>
         </Box>
-      ) : (
-        <>
-          {viewMode === "calendar" ? (
-            <Box sx={{ height: 700 }}>
-              <Calendar
-                localizer={localizer}
-                events={calendarEvents}
-                startAccessor="start"
-                endAccessor="end"
-                style={{ height: "100%" }}
-                onSelectEvent={handleCalendarEventClick}
-              />
-            </Box>
-          ) : (
-            <Grid container spacing={3}>
-              {filteredEvents.map((event) => (
-                <Grid
-                  item
-                  key={event._id}
-                  xs={12}
-                  sm={viewMode === "list" ? 12 : 6}
-                  md={viewMode === "list" ? 12 : 4}
-                >
-                  <EventCard event={event} viewMode={viewMode} />
-                </Grid>
-              ))}
-            </Grid>
-          )}
-        </>
-      )}
-
-      {filteredEvents.length > 0 && viewMode !== "calendar" && (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-          <ButtonGroup variant="outlined">
-            <Button>Previous</Button>
-            <Button variant="contained">1</Button>
-            <Button>2</Button>
-            <Button>3</Button>
-            <Button>Next</Button>
-          </ButtonGroup>
+      ) : viewMode === "calendar" ? (
+        <Box sx={{ height: 700 }}>
+          <Calendar
+            localizer={localizer}
+            events={calendarEvents}
+            startAccessor="start"
+            endAccessor="end"
+            style={{ height: "100%" }}
+            onSelectEvent={handleCalendarEventClick}
+          />
         </Box>
+      ) : (
+        <Grid container spacing={3}>
+          {filteredEvents.map((event) => (
+            <Grid
+              item
+              key={event._id}
+              xs={12}
+              sm={viewMode === "list" ? 12 : 6}
+              md={viewMode === "list" ? 12 : 4}
+            >
+              <EventCard event={event} viewMode={viewMode} />
+            </Grid>
+          ))}
+        </Grid>
       )}
     </Container>
   );

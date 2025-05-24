@@ -88,7 +88,7 @@ export function AuthProvider({ children }) {
           role,
         }
       );
-      dispatch({ type: "AUTH_SUCCESS", payload: response.data });
+      dispatch({ type: "AUTH_SUCCESS", payload: response.data.data });
     } catch (err) {
       dispatch({
         type: "AUTH_FAILURE",
