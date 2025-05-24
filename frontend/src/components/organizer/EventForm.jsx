@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { eventService } from "../../services/api";
+import { eventService, BACKEND_BASE_URL } from "../../services/api";
 import "./EventForm.css";
 import axios from "axios";
 import Toast from "../Toast";
@@ -30,7 +30,9 @@ const EventForm = ({ isEdit = false, onEventCreated }) => {
     price: "",
     totalTickets: "",
     category: "Conference",
+    image: null,
   });
+  const [imagePreview, setImagePreview] = useState(null);
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
@@ -45,7 +47,6 @@ const EventForm = ({ isEdit = false, onEventCreated }) => {
       const response = await eventService.getEventById(id);
       if (response.success && response.data) {
         const eventData = response.data;
-        // Ensure all fields have default values
         setFormData({
           title: eventData.title || "",
           description: eventData.description || "",
@@ -57,8 +58,14 @@ const EventForm = ({ isEdit = false, onEventCreated }) => {
           totalTickets: eventData.totalTickets
             ? eventData.totalTickets.toString()
             : "",
-          category: eventData.category || "conference",
+          category: eventData.category || "Conference",
+          image: null,
         });
+        if (eventData.image) {
+          // Construct the full image URL for preview
+          const fullImageUrl = `${BACKEND_BASE_URL}${eventData.image.startsWith('/') ? eventData.image : '/' + eventData.image}`;
+          setImagePreview(fullImageUrl);
+        }
       } else {
         setError("Invalid event data received");
       }
@@ -78,26 +85,59 @@ const EventForm = ({ isEdit = false, onEventCreated }) => {
     }));
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setToast({ message: "Please select an image file", type: "error" });
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setToast({ message: "Image size should be less than 5MB", type: "error" });
+        return;
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        image: file
+      }));
+
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     try {
-      const eventData = {
-        title: formData.title.trim(),
-        description: formData.description.trim(),
-        date: new Date(formData.date).toISOString(),
-        location: formData.location.trim(),
-        price: parseFloat(formData.price),
-        totalTickets: parseInt(formData.totalTickets, 10),
-        category: formData.category,
-      };
+      const formDataToSend = new FormData();
+      formDataToSend.append('title', formData.title.trim());
+      formDataToSend.append('description', formData.description.trim());
+      formDataToSend.append('date', new Date(formData.date).toISOString());
+      formDataToSend.append('location', formData.location.trim());
+      formDataToSend.append('price', parseFloat(formData.price));
+      formDataToSend.append('totalTickets', parseInt(formData.totalTickets, 10));
+      formDataToSend.append('category', formData.category);
+      if (formData.image) {
+        formDataToSend.append('image', formData.image);
+      }
+
       let response;
       if (isEdit && id) {
-        response = await eventService.updateEvent(id, eventData);
+        response = await eventService.updateEvent(id, formDataToSend);
       } else {
-        response = await eventService.createEvent(eventData);
+        response = await eventService.createEvent(formDataToSend);
       }
+
       if (response.success) {
         setToast({ message: isEdit ? "Event updated successfully!" : "Event created successfully!", type: "success" });
         setTimeout(() => navigate("/organizer/events"), 1200);
@@ -225,10 +265,27 @@ const EventForm = ({ isEdit = false, onEventCreated }) => {
           </select>
         </div>
 
+        <div className="form-group">
+          <label htmlFor="image">Event Image</label>
+          <input
+            type="file"
+            id="image"
+            name="image"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="image-input"
+          />
+          {imagePreview && (
+            <div className="image-preview">
+              <img src={imagePreview} alt="Event preview" />
+            </div>
+          )}
+        </div>
+
         <div className="form-actions">
           <button
             type="button"
-            onClick={() => navigate("/my-events")}
+            onClick={() => navigate("/organizer/events")}
             className="cancel-btn"
           >
             Cancel

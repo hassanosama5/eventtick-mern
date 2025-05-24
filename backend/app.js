@@ -37,6 +37,9 @@ app.use(
 
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static files from the 'uploads' directory
+app.use('/uploads', express.static('uploads'));
+
 // // Request logging middleware
 // app.use((req, res, next) => {
 //   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);

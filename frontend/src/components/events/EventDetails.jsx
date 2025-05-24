@@ -15,6 +15,7 @@ import {
 import { format } from "date-fns";
 import axios from "axios";
 import BookTicketForm from "./BookTicketForm";
+import { BACKEND_BASE_URL } from "../../services/api";
 
 // Helper API URL
 //const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -109,9 +110,7 @@ const EventDetails = () => {
           <Box
             sx={{
               height: 400,
-              backgroundImage: `url(${
-                event?.imageUrl || "/default-event.jpg"
-              })`,
+              backgroundImage: `url(${event?.imageUrl ? `${BACKEND_BASE_URL}${event.imageUrl.startsWith('/') ? event.imageUrl : '/' + event.imageUrl}` : "/default-event.jpg"})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
               borderRadius: 2,

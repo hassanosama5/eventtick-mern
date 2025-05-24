@@ -21,6 +21,7 @@ import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import ShareIcon from '@mui/icons-material/Share';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import { eventService, BACKEND_BASE_URL } from "../../services/api";
 
 const EventCard = ({ 
   event, 
@@ -32,6 +33,7 @@ const EventCard = ({
   loading = false,
   viewMode = 'grid'
 }) => {
+  console.log('EventCard received event prop:', event);
   const [isSaved, setIsSaved] = useState(false);
   
   // If loading is true or event is undefined, show skeleton
@@ -45,13 +47,20 @@ const EventCard = ({
     date,
     location,
     price,
-    imageUrl,
+    image,
     category,
     status,
     capacity,
     attendees = [],
     description
   } = event;
+  
+  const finalImageUrl = image ? `${BACKEND_BASE_URL}${image.startsWith('/') ? image : '/' + image}` : '/default-event.jpg';
+  
+  // Add a cache-busting query parameter
+  const cacheBustedImageUrl = finalImageUrl !== '/default-event.jpg' ? `${finalImageUrl}?v=${Date.now()}` : finalImageUrl;
+
+  console.log('EventCard Final Image URL:', cacheBustedImageUrl);
   
   // Handle save/favorite toggle
   const handleSaveToggle = (e) => {
@@ -89,6 +98,7 @@ const EventCard = ({
 
   // Render logic based on viewMode
   if (viewMode === 'list') {
+    console.log('EventCard List View Final Image URL:', cacheBustedImageUrl);
     return (
       <Link to={`/events/${_id}`} style={{ textDecoration: 'none' }}>
         <Card
@@ -122,13 +132,31 @@ const EventCard = ({
           <Box
             sx={{
               width: 200, // Fixed width for the image in list view
+              height: 150, // Add explicit height
               flexShrink: 0, // Prevent image from shrinking
-              backgroundImage: `url(${imageUrl || '/default-event.jpg'})`,
+              position: 'relative',
+              overflow: 'hidden', // Hide parts of the image that exceed the box dimensions
+            }}
+            style={{
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              position: 'relative',
             }}
           >
+            {/* Use img tag instead of background-image */}
+            <img 
+              src={cacheBustedImageUrl} 
+              alt={title || 'Event Image'} 
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover', // Cover the box while maintaining aspect ratio
+                position: 'absolute', // Position absolutely within the relative parent Box
+                top: 0,
+                left: 0,
+                zIndex: 0, // Ensure it's behind other content like the favorite button
+              }}
+            />
+
              {/* Save/Favorite button */}
             <IconButton
               onClick={handleSaveToggle}
@@ -271,15 +299,36 @@ const EventCard = ({
         <Box
           sx={{
             height: 200,
-            backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.6)), url(${imageUrl || '/default-event.jpg'})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            position: 'relative',
+            width: '100%', // Add explicit width
             display: 'flex',
             alignItems: 'flex-end',
-            p: 2
+            p: 2,
+            position: 'relative',
+            overflow: 'hidden', // Hide parts of the image that exceed the box dimensions
+          }}
+           style={{
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
           }}
         >
+          {/* Use img tag instead of background-image */}
+           <img 
+            src={cacheBustedImageUrl} 
+            alt={title || 'Event Image'} 
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover', // Cover the box while maintaining aspect ratio
+              position: 'absolute', // Position absolutely within the relative parent Box
+              top: 0,
+              left: 0,
+              zIndex: 0, // Ensure it's behind other content like the favorite button
+            }}
+          />
+
+          {/* Add gradient overlay using another Box or pseudo-element if needed */}
+          {/* For now, the focus is just on getting the image to display */}
+
           {/* Save/Favorite button */}
           <IconButton 
             onClick={handleSaveToggle} 

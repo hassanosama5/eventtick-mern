@@ -1,5 +1,6 @@
 const Event = require("../models/Event");
 const Booking = require("../models/Booking");
+const fs = require('fs');
 
 // Get all events (public)
 exports.getEvents = async (req, res) => {
@@ -16,6 +17,7 @@ exports.getEvents = async (req, res) => {
     console.log("Fetching events with filter:", filter);
 
     const events = await Event.find(filter).populate("organizer", "name email");
+    console.log('Events fetched in getEvents:', events);
     res.json({
       success: true,
       data: events,
@@ -35,6 +37,7 @@ exports.getApprovedEvents = async (req, res) => {
       "organizer",
       "name email"
     );
+    console.log('Events fetched in getApprovedEvents:', events);
     res.json({
       success: true,
       data: events,
@@ -74,6 +77,9 @@ exports.getEventById = async (req, res) => {
 
 // Create event (organizer only)
 exports.createEvent = async (req, res) => {
+  console.log('createEvent controller hit');
+  console.log('req.body:', req.body);
+  console.log('req.file:', req.file);
   try {
     const {
       title,
@@ -83,11 +89,17 @@ exports.createEvent = async (req, res) => {
       price,
       totalTickets,
       category,
-      image,
     } = req.body;
+
+    // Access file path from multer
+    const imageUrl = req.file ? `/uploads/events/${req.file.filename}` : null;
 
     // Validate required fields
     if (!title || !date || !location || !price || !totalTickets) {
+      // If a file was uploaded but validation failed, delete the file
+      if (req.file) {
+        fs.unlinkSync(req.file.path);
+      }
       return res.status(400).json({
         success: false,
         message:
@@ -97,6 +109,10 @@ exports.createEvent = async (req, res) => {
 
     // Validate totalTickets is a positive number
     if (totalTickets <= 0) {
+       // If a file was uploaded but validation failed, delete the file
+       if (req.file) {
+        fs.unlinkSync(req.file.path);
+      }
       return res.status(400).json({
         success: false,
         message: "Total tickets must be greater than 0",
@@ -114,11 +130,11 @@ exports.createEvent = async (req, res) => {
       availableTickets: totalTickets, // Set available tickets equal to total tickets initially
       organizer: req.user.id,
       status: "pending",
+      image: imageUrl, // Save the image URL
     };
 
     // Add optional fields if provided
     if (category) eventData.category = category;
-    if (image) eventData.image = image;
 
     // Create and save the event
     const event = new Event(eventData);
@@ -131,6 +147,10 @@ exports.createEvent = async (req, res) => {
     });
   } catch (error) {
     console.error("Event creation error:", error);
+     // If a file was uploaded and an error occurred, delete the file
+     if (req.file) {
+      fs.unlinkSync(req.file.path);
+    }
     res.status(400).json({
       success: false,
       message: error.message,
@@ -138,36 +158,75 @@ exports.createEvent = async (req, res) => {
   }
 };
 
-// Update event (organizer of the event or admin)
+// Update event (organizer/admin)
 exports.updateEvent = async (req, res) => {
-  try {
-    const event = await Event.findById(req.params.id);
-    if (!event) {
-      return res.status(404).json({ message: "Event not found" });
+    try {
+        const event = await Event.findById(req.params.id);
+
+        if (!event) {
+            // If a file was uploaded but event not found, delete the file
+            if (req.file) {
+              fs.unlinkSync(req.file.path);
+            }
+            return res.status(404).json({
+                success: false,
+                message: 'Event not found'
+            });
+        }
+
+        // Check if the logged in user is the event organizer or an admin
+        if (event.organizer.toString() !== req.user.id && req.user.role !== 'admin') {
+             // If a file was uploaded but user is not authorized, delete the file
+             if (req.file) {
+              fs.unlinkSync(req.file.path);
+            }
+            return res.status(401).json({
+                success: false,
+                message: 'Not authorized to update this event'
+            });
+        }
+
+        // Access file path from multer
+        const imageUrl = req.file ? `/uploads/events/${req.file.filename}` : event.image; // Use new image or existing one
+
+        const updatedEventData = {
+            ...req.body,
+            image: imageUrl,
+        };
+         // Ensure totalTickets is a number before updating
+        if (updatedEventData.totalTickets) {
+          updatedEventData.totalTickets = parseInt(updatedEventData.totalTickets, 10);
+          // Optionally update available tickets if total tickets increased
+          if (updatedEventData.totalTickets > event.totalTickets) {
+            updatedEventData.availableTickets = event.availableTickets + (updatedEventData.totalTickets - event.totalTickets);
+          }
+        }
+         // Ensure price is a number before updating
+        if (updatedEventData.price) {
+          updatedEventData.price = parseFloat(updatedEventData.price);
+        }
+
+        const updatedEvent = await Event.findByIdAndUpdate(req.params.id, updatedEventData, {
+            new: true,
+            runValidators: true
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Event updated successfully',
+            data: updatedEvent
+        });
+    } catch (error) {
+        console.error('Event update error:', error);
+         // If a file was uploaded and an error occurred, delete the file
+         if (req.file) {
+          fs.unlinkSync(req.file.path);
+        }
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
     }
-
-    // Check if user is organizer or admin
-    if (
-      event.organizer.toString() !== req.user.id &&
-      req.user.role !== "admin"
-    ) {
-      return res
-        .status(403)
-        .json({ message: "Not authorized to update this event" });
-    }
-
-    // Don't allow updating status through this endpoint
-    delete req.body.status;
-
-    const updatedEvent = await Event.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
-    res.json(updatedEvent);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
 };
 
 // Delete event (organizer of the event or admin)

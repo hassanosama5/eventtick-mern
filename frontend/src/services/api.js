@@ -1,6 +1,7 @@
 import axios from "axios";
 
 const API_URL = "http://localhost:5000/api/v1/events";
+export const BACKEND_BASE_URL = "http://localhost:5000"; // Export backend base URL
 
 // Create axios instance configured for cookie-based auth
 const api = axios.create({
@@ -52,12 +53,20 @@ export const eventService = {
   /**
    * Create new event (organizer only)
    */
-  createEvent: async (eventData) => {
+  createEvent: async (formData) => {
     try {
-      const response = await api.post("/", eventData);
+      const response = await axios.post(
+        "http://localhost:5000/api/v1/events",
+        formData,
+        {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
       return response.data;
     } catch (error) {
-      console.error("Error creating event:", error);
       throw error;
     }
   },
@@ -65,12 +74,20 @@ export const eventService = {
   /**
    * Update event (organizer/admin)
    */
-  updateEvent: async (id, eventData) => {
+  updateEvent: async (id, formData) => {
     try {
-      const response = await api.put(`/${id}`, eventData);
+      const response = await axios.put(
+        `http://localhost:5000/api/v1/events/${id}`,
+        formData,
+        {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
       return response.data;
     } catch (error) {
-      console.error("Error updating event:", error);
       throw error;
     }
   },

@@ -37,12 +37,6 @@ const eventSchema = new mongoose.Schema({
     },
     image: { 
         type: String,
-        validate: {
-            validator: function(value) {
-                return !value || /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i.test(value);
-            },
-            message: 'Invalid image URL format'
-        }
     },
     price: { 
         type: Number, 
