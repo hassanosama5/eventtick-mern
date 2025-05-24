@@ -108,6 +108,100 @@ exports.register = async (req, res) => {
   }
 };
 
+// @desc    Register a new admin
+// @route   POST /api/v1/auth/admin/register
+exports.adminRegister = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    console.log("Admin registration attempt for:", email);
+
+    // Validate input
+    if (!name || !email || !password) {
+      console.log("Missing required fields in body for admin registration");
+      return res.status(400).json({
+        success: false,
+        message: "Please provide all required fields (name, email, password)",
+      });
+    }
+
+    // Check if user (admin) already exists
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      console.log("User (admin) already exists:", email);
+      return res.status(400).json({
+        success: false,
+        message: "User with this email already exists",
+      });
+    }
+
+    // Generate salt and hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    console.log("Password hashed successfully for admin registration");
+
+    // Create user with admin role
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role: "admin", // Explicitly set role to admin
+    });
+
+    if (!user) {
+      console.log("Failed to create admin user in DB");
+      throw new Error("Failed to create admin user");
+    }
+
+    console.log("Admin user created successfully:", {
+      id: user._id,
+      email: user.email,
+    });
+
+    try {
+      // Generate token for the newly created admin
+      const token = generateToken(user);
+
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Strict",
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
+
+      res.status(201).json({
+        success: true,
+        data: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          token, // Return token for immediate use if needed, but rely on cookies
+        },
+      });
+    } catch (tokenError) {
+      console.error("Token generation error after admin creation:", tokenError);
+      // Even if token generation fails, admin user was created
+      return res.status(201).json({
+        success: true,
+        data: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          message: "Admin user created but token generation failed",
+        },
+      });
+    }
+  } catch (error) {
+    console.error("Admin registration error in catch block:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error during admin registration",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
 // @desc    Login user
 // @route   POST /api/v1/login
 // @route   POST /api/v1/login

@@ -5,6 +5,7 @@ const { protect, authorize } = require("../Middleware/authMiddleware");
 
 // Authentication routes
 router.post("/register", authController.register);
+router.post("/admin/register", authController.adminRegister);
 router.post("/login", authController.login);
 router.post("/logout", authController.logout);
 
