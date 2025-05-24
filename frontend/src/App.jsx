@@ -15,6 +15,7 @@ import Footer from "./components/Footer";
 // Auth Pages
 import LoginForm from "./components/auth/LoginForm";
 import RegisterForm from "./components/auth/RegisterForm";
+import AdminRegisterForm from "./components/auth/AdminRegisterForm";
 import ForgotPassword from "./components/auth/ForgotPassword";
 import Unauthorized from "./components/Unauthorized";
 
@@ -137,6 +138,7 @@ function App() {
             <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/login" element={<LoginForm />} />
             <Route path="/register" element={<RegisterForm />} />
+            <Route path="/admin/register" element={<AdminRegisterForm />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="/events" element={<PublicEventList />} />
