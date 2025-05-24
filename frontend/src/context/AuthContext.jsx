@@ -62,7 +62,7 @@ export function AuthProvider({ children }) {
             },
           }
         );
-        dispatch({ type: "AUTH_SUCCESS", payload: response.data });
+        dispatch({ type: "AUTH_SUCCESS", payload: response.data.data });
         // eslint-disable-next-line no-unused-vars
       } catch (err) {
         // Clear invalid credentials
@@ -115,7 +115,7 @@ export function AuthProvider({ children }) {
 
       // Store token in memory (not localStorage for security)
       dispatch({ type: "AUTH_SUCCESS", payload: response.data.data });
-      navigate("/");
+      // Removed navigate("/") to allow LoginForm to handle navigation after toast
     } catch (err) {
       console.error("Login error:", err.response?.data);
       dispatch({

@@ -24,11 +24,15 @@ import axios from "axios";
 import { format } from "date-fns";
 import Toast from "../Toast";
 import Loader from "../Loader";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 // Ensure axios sends cookies with every request
 axios.defaults.withCredentials = true;
 
 const UserBookings = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -56,6 +60,15 @@ const UserBookings = () => {
   useEffect(() => {
     fetchBookings();
   }, []);
+
+  useEffect(() => {
+    if (user && user.role !== "standard") {
+      setToast({
+        message: "Organizers and admins do not have bookings. Only standard users can view bookings.",
+        type: "error",
+      });
+    }
+  }, [user]);
 
   const handleCancelClick = (bookingId) => {
     setBookingToCancel(bookingId);
@@ -87,6 +100,18 @@ const UserBookings = () => {
       handleCloseCancelDialog();
     }
   };
+
+  // Redirect after toast closes
+  const handleToastClose = () => {
+    setToast(null);
+    navigate("/"); // Redirect to home page, change if you want a different page
+  };
+
+  if (user && user.role !== "standard") {
+    return toast ? (
+      <Toast message={toast.message} type={toast.type} onClose={handleToastClose} />
+    ) : null;
+  }
 
   if (loading) {
     return (

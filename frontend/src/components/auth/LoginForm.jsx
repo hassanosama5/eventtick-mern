@@ -10,18 +10,24 @@ export default function LoginForm() {
   const { login, isLoading, error } = useAuth();
   const navigate = useNavigate();
   const [toast, setToast] = useState(null);
+  const [shouldRedirect, setShouldRedirect] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      console.log("Attempting login with:", { email, password });
       const trimmedEmail = email.trim();
       const trimmedPassword = password.trim();
       await login(trimmedEmail, trimmedPassword);
       setToast({ message: "Login successful! Welcome back.", type: "success" });
-      setTimeout(() => navigate("/"), 1200);
+      setShouldRedirect(true);
     } catch (err) {
-      setToast({ message: "Login failed. Please check your credentials.", type: "error" });
-      console.error("Login error:", err);
+      console.error("Login error in form:", err);
+      setToast({ 
+        message: err.response?.data?.message || "Login failed. Please check your credentials.", 
+        type: "error" 
+      });
+      setShouldRedirect(false);
     }
   };
 
@@ -29,7 +35,14 @@ export default function LoginForm() {
     <div className="auth-form-container">
       <h2>Login</h2>
       {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => {
+            setToast(null);
+            if (shouldRedirect) navigate("/");
+          }} 
+        />
       )}
       <form onSubmit={handleSubmit} className="auth-form">
         <div className="form-group">
