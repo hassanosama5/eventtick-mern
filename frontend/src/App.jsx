@@ -87,9 +87,7 @@ function RoleBasedNavigation() {
           <Button component={Link} to="/my-bookings" variant="text">
             My Bookings
           </Button>
-          <Button component={Link} to="/profile" variant="text">
-            Profile
-          </Button>
+          
         </>
       )}
 

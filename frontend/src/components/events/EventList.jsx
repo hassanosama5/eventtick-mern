@@ -44,6 +44,8 @@ const EventList = ({ events: initialEvents }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [viewMode, setViewMode] = useState("grid"); // grid, list, calendar
+  const [currentPage, setCurrentPage] = useState(1);
+  const eventsPerPage = 6;
 
   const navigate = useNavigate();
 
@@ -53,6 +55,8 @@ const EventList = ({ events: initialEvents }) => {
     "seminar",
     "concert",
     "exhibition",
+    "Entertainment",
+    "Sports",
     "other",
   ];
 
@@ -92,6 +96,19 @@ const EventList = ({ events: initialEvents }) => {
     });
     setFilteredEvents(filtered);
   }, [searchTerm, categoryFilter, events]);
+
+  // Calculate total pages for pagination
+  const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
+  // Slice events for current page
+  const paginatedEvents = filteredEvents.slice(
+    (currentPage - 1) * eventsPerPage,
+    currentPage * eventsPerPage
+  );
+
+  // Reset to first page if filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, categoryFilter]);
 
   const handleCalendarEventClick = (event) => {
     navigate(`/events/${event._id}`);
@@ -176,11 +193,26 @@ const EventList = ({ events: initialEvents }) => {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Search events"
+              label="Search"
               variant="outlined"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by event name or location"
+              placeholder="Search events"
+              InputLabelProps={{ shrink: true }}
+              sx={{
+                '& .MuiInputBase-input': {
+                  fontFamily: 'inherit',
+                  fontSize: '1rem',
+                  fontWeight: 400,
+                  fontStyle: 'normal',
+                  color: 'rgba(0,0,0,0.87)',
+                },
+                '& .MuiInputBase-input::placeholder': {
+                  fontStyle: 'normal',
+                  color: 'rgba(0,0,0,0.87)',
+                  opacity: 1,
+                }
+              }}
             />
           </Grid>
           <Grid item xs={12} md={6}>
@@ -191,7 +223,19 @@ const EventList = ({ events: initialEvents }) => {
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
               variant="outlined"
+              sx={{ minWidth: 180, height: '56px', '& .MuiInputBase-root': { height: '56px', alignItems: 'center' } }}
+              SelectProps={{ displayEmpty: true }}
             >
+              <MenuItem value="none" disabled>
+                <span style={{
+                  fontStyle: 'normal',
+                  color: 'rgba(0,0,0,0.87)',
+                  fontSize: '1rem',
+                  fontFamily: 'inherit',
+                  fontWeight: 400
+                }}>Choose a category</span>
+              </MenuItem>
+              <MenuItem value="all">All Categories</MenuItem>
               {categories.map((category) => (
                 <MenuItem key={category} value={category}>
                   {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -228,14 +272,15 @@ const EventList = ({ events: initialEvents }) => {
               />
             </Box>
           ) : (
-            <Grid container spacing={3}>
-              {filteredEvents.map((event) => (
+            <Grid container spacing={3} justifyContent="center" alignItems="stretch">
+              {paginatedEvents.map((event) => (
                 <Grid
                   item
                   key={event._id}
                   xs={12}
-                  sm={viewMode === "list" ? 12 : 6}
-                  md={viewMode === "list" ? 12 : 4}
+                  sm={6}
+                  md={4}
+                  style={{ display: 'flex', justifyContent: 'center' }}
                 >
                   <EventCard event={event} viewMode={viewMode} />
                 </Grid>
@@ -248,11 +293,27 @@ const EventList = ({ events: initialEvents }) => {
       {filteredEvents.length > 0 && viewMode !== "calendar" && (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
           <ButtonGroup variant="outlined">
-            <Button>Previous</Button>
-            <Button variant="contained">1</Button>
-            <Button>2</Button>
-            <Button>3</Button>
-            <Button>Next</Button>
+            <Button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+            {[...Array(totalPages)].map((_, idx) => (
+              <Button
+                key={idx + 1}
+                variant={currentPage === idx + 1 ? "contained" : "outlined"}
+                onClick={() => setCurrentPage(idx + 1)}
+              >
+                {idx + 1}
+              </Button>
+            ))}
+            <Button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
           </ButtonGroup>
         </Box>
       )}

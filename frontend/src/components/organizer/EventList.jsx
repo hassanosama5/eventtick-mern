@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 import "./EventList.css";
+import EventCard from "../events/EventCard";
+import { Button, ButtonGroup, TextField, MenuItem, Box, Grid } from "@mui/material";
 
 const OrganizerEventList = () => {
   const navigate = useNavigate();
@@ -10,13 +12,42 @@ const OrganizerEventList = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const eventsPerPage = 6;
+  const categories = [
+    "conference",
+    "workshop",
+    "seminar",
+    "concert",
+    "exhibition",
+    "other",
+    "sports"
+  ];
+
+  // Filter events by search and category
+  const filteredEvents = events.filter((event) => {
+    const matchesSearch =
+      event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory =
+      categoryFilter === "all" || event.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
+
+  const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
+  const paginatedEvents = filteredEvents.slice(
+    (currentPage - 1) * eventsPerPage,
+    currentPage * eventsPerPage
+  );
 
   useEffect(() => {
     const fetchEvents = async () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          "http://localhost:5000/api/v1/events/organizer", // <-- updated URL here
+          "http://localhost:5000/api/v1/events/organizer", 
           { withCredentials: true }
         );
 
@@ -36,6 +67,10 @@ const OrganizerEventList = () => {
       fetchEvents();
     }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [events.length, searchTerm, categoryFilter]);
 
   const handleDelete = async (id) => {
     try {
@@ -68,39 +103,90 @@ const OrganizerEventList = () => {
           <p>You haven't created any events yet.</p>
         </div>
       ) : (
-        <div className="events-grid">
-          {events.map((event) => (
-            <div key={event._id} className="event-card">
-              <div className="event-header">
-                <h3>{event.title}</h3>
-                <span className={`event-status ${event.status}`}>
-                  {event.status}
-                </span>
-              </div>
-
-              <div className="event-actions">
-                <button onClick={() => navigate(`/events/${event._id}`)}>
-                  View
-                </button>
-                <button
-                  onClick={() =>
-                    navigate(`/organizer/events/edit/${event._id}`)
-                  }
+        <>
+          {/* Search and filter bar */}
+          <Box sx={{ mb: 4 }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Search"
+                  variant="outlined"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search events"
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  select
+                  label="Category"
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  variant="outlined"
+                  SelectProps={{ displayEmpty: true }}
                 >
-                  Edit
-                </button>
-                <button
-                  onClick={() =>
-                    navigate(`/organizer/events/${event._id}/analytics`)
-                  }
-                >
-                  Analytics
-                </button>
-                <button onClick={() => handleDelete(event._id)}>Delete</button>
+                  <MenuItem value="all">All Categories</MenuItem>
+                  {categories.map((category) => (
+                    <MenuItem key={category} value={category}>
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+            </Grid>
+          </Box>
+          <div style={{ padding: '16px 0' }}>
+            <div style={{ width: '100%' }}>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <div style={{ width: '100%' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, justifyContent: 'center' }}>
+                    {paginatedEvents.map((event) => (
+                      <EventCard
+                        key={event._id}
+                        event={event}
+                        viewMode="grid"
+                        showOrganizerActions={true}
+                        onEdit={() => navigate(`/organizer/events/edit/${event._id}`)}
+                        onDelete={() => handleDelete(event._id)}
+                        onAnalytics={() => navigate(`/organizer/events/${event._id}/analytics`)}
+                        onView={() => navigate(`/events/${event._id}`)}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+          {filteredEvents.length > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
+              <ButtonGroup variant="outlined">
+                <Button
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                {[...Array(totalPages)].map((_, idx) => (
+                  <Button
+                    key={idx + 1}
+                    variant={currentPage === idx + 1 ? "contained" : "outlined"}
+                    onClick={() => setCurrentPage(idx + 1)}
+                  >
+                    {idx + 1}
+                  </Button>
+                ))}
+                <Button
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </ButtonGroup>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

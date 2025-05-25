@@ -8,6 +8,7 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <div className="nav-container">
+        <div className="nav-spacer" />
         <Link to="/" className="nav-brand">
           EventTick
         </Link>
