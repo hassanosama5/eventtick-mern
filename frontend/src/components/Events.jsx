@@ -18,7 +18,7 @@ import {
 import axios from "axios";
 import EventCard from "./events/EventCard";
 
-//const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL;
 
 const Events = () => {
   const [events, setEvents] = useState([]);
@@ -32,7 +32,7 @@ const Events = () => {
 
   const fetchEvents = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/v1/events`, {
+      const response = await axios.get(`${API_BASE_URL}/api/v1/events`, {
         withCredentials: true, // send cookie automatically
       });
 
@@ -59,7 +59,7 @@ const Events = () => {
   const handleApprove = async (eventId) => {
     try {
       await axios.patch(
-        `http://localhost:5000/api/v1/events/${eventId}/status`,
+        `${API_BASE_URL}/api/v1/events/${eventId}/status`,
         { status: "approved" },
         {
           withCredentials: true, // send cookie automatically
@@ -75,7 +75,7 @@ const Events = () => {
   const handleDecline = async (eventId) => {
     try {
       await axios.patch(
-        `http://localhost:5000/api/v1/events/${eventId}/status`,
+        `${API_BASE_URL}/api/v1/events/${eventId}/status`,
         { status: "declined" },
         {
           withCredentials: true, // send cookie automatically

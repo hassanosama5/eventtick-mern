@@ -25,7 +25,7 @@ import getDay from "date-fns/getDay";
 import enUS from "date-fns/locale/en-US";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
-//const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL;
 
 const locales = { "en-US": enUS };
 const localizer = dateFnsLocalizer({
@@ -64,7 +64,7 @@ const EventList = ({ events: initialEvents }) => {
     const fetchEvents = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/v1/events/approved`,
+          `${API_BASE_URL}/api/v1/events/approved`,
           {
             withCredentials: true,
           }

@@ -15,10 +15,9 @@ import {
 import { format } from "date-fns";
 import axios from "axios";
 import BookTicketForm from "./BookTicketForm";
-import { BACKEND_BASE_URL } from "../../services/api";
 
 // Helper API URL
-//const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL;
 
 const EventDetails = () => {
   const { id } = useParams();
@@ -32,7 +31,7 @@ const EventDetails = () => {
   const checkAuthStatus = async () => {
     try {
       // Backend should have an endpoint like /api/v1/auth/me that reads cookie and returns user info or 401
-      await axios.get("http://localhost:5000/api/v1/users/profile", {
+      await axios.get(`${API_BASE_URL}/api/v1/users/profile`, {
         withCredentials: true, // send cookies automatically
       });
       setIsAuthenticated(true);
@@ -44,7 +43,7 @@ const EventDetails = () => {
   const fetchEventDetails = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/v1/events/${id}`,
+        `${API_BASE_URL}/api/v1/events/${id}`,
         {
           withCredentials: true, // send cookie just in case needed by backend
         }
@@ -110,7 +109,7 @@ const EventDetails = () => {
           <Box
             sx={{
               height: 400,
-              backgroundImage: `url(${event?.imageUrl ? `${BACKEND_BASE_URL}${event.imageUrl.startsWith('/') ? event.imageUrl : '/' + event.imageUrl}` : "/default-event.jpg"})`,
+              backgroundImage: `url(${event?.imageUrl ? `${API_BASE_URL}${event.imageUrl.startsWith('/') ? event.imageUrl : '/' + event.imageUrl}` : "/default-event.jpg"})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
               borderRadius: 2,

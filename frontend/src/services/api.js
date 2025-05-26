@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/v1/events";
-export const BACKEND_BASE_URL = "http://localhost:5000"; // Export backend base URL
+const API_URL = `${import.meta.env.REACT_APP_API_BASE_URL}/api/v1/events`;
+export const BACKEND_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL; // Export backend base URL
 
 // Create axios instance configured for cookie-based auth
 const api = axios.create({
@@ -56,7 +56,7 @@ export const eventService = {
   createEvent: async (formData) => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/v1/events",
+        `${import.meta.env.REACT_APP_API_BASE_URL}/api/v1/events`,
         formData,
         {
           withCredentials: true,
@@ -77,7 +77,7 @@ export const eventService = {
   updateEvent: async (id, formData) => {
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/v1/events/${id}`,
+        `${import.meta.env.REACT_APP_API_BASE_URL}/api/v1/events/${id}`,
         formData,
         {
           withCredentials: true,

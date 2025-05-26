@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with custom config
 const api = axios.create({
-  baseURL: 'http://localhost:5000',  // Hardcoded backend URL
+  baseURL: import.meta.env.REACT_APP_API_BASE_URL,  // Use env variable for backend URL
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

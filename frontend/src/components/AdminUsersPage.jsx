@@ -17,7 +17,7 @@ import UserRow from './UserRow';
 import UpdateUserRoleModal from './UpdateUserRoleModal'; // Import modal
 import ConfirmationDialog from './ConfirmationDialog'; // Import dialog
 
-const API_BASE_URL = 'http://localhost:5000/api/v1/';
+const API_BASE_URL = `${import.meta.env.REACT_APP_API_BASE_URL}/api/v1/`;
 
 // *** Replace with your actual admin token for testing ***
 const AUTH_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmIwZmU3NzczMjNmZTE5ODY3NjY0ZCIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NzY1MjU4MywiZXhwIjoxNzUwMjQ0NTgzfQ.e_N_BcNG97eqvxNfEvpSiPpFuj9T2K6tOtyClCqcHiw';

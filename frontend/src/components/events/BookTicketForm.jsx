@@ -17,7 +17,7 @@ import axios from "axios";
 import Toast from "../Toast";
 import Loader from "../Loader";
 
-//const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL;
 
 const BookTicketForm = ({
   eventId,
@@ -46,7 +46,7 @@ const BookTicketForm = ({
     try {
       // 🧠 Auth is now handled by cookies — no need to check localStorage
       const response = await axios.post(
-        `http://localhost:5000/api/v1/bookings`,
+        `${API_BASE_URL}/api/v1/bookings`,
         {
           eventId,
           quantity,

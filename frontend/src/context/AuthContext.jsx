@@ -5,6 +5,7 @@ import {
   useReducer,
   useEffect,
   useState,
+  useCallback,
 } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +20,8 @@ const initialState = {
   mfaRequired: false,
   mfaEmail: null,
 };
+
+const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL;
 
 function reducer(state, action) {
   switch (action.type) {
@@ -71,11 +74,11 @@ export function AuthProvider({ children }) {
   const [resetEmail, setResetEmail] = useState(null);
   const navigate = useNavigate();
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     try {
       dispatch({ type: "REFRESH_START" });
       const response = await axios.get(
-        "http://localhost:5000/api/v1/users/profile",
+        `${API_BASE_URL}/api/v1/users/profile`,
         {
           withCredentials: true,
           headers: { "Content-Type": "application/json" },
@@ -94,14 +97,14 @@ export function AuthProvider({ children }) {
         payload: error.response?.data?.message || "Failed to refresh profile" 
       });
     }
-  };
+  }, [dispatch]);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
         dispatch({ type: "LOGIN_START" });
         const response = await axios.get(
-          "http://localhost:5000/api/v1/users/profile",
+          `${API_BASE_URL}/api/v1/users/profile`,
           {
             withCredentials: true,
             headers: { "Content-Type": "application/json" },
@@ -129,7 +132,7 @@ export function AuthProvider({ children }) {
     dispatch({ type: "REGISTER_START" });
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/v1/register",
+        `${API_BASE_URL}/api/v1/register`,
         { name, email, password, role },
         {
           withCredentials: true,
@@ -155,7 +158,7 @@ export function AuthProvider({ children }) {
     dispatch({ type: "LOGIN_START" });
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/v1/login",
+        `${API_BASE_URL}/api/v1/login`,
         { email, password },
         {
           withCredentials: true,
@@ -188,7 +191,7 @@ export function AuthProvider({ children }) {
   const forgotPassword = async (email) => {
     dispatch({ type: "FORGOT_PASSWORD_START" });
     try {
-      await axios.put("http://localhost:5000/api/v1/forgotPassword", { email });
+      await axios.put(`${API_BASE_URL}/api/v1/forgotPassword`, { email });
       setResetEmail(email);
       dispatch({ type: "FORGOT_PASSWORD_SUCCESS" });
       return true;
@@ -204,7 +207,7 @@ export function AuthProvider({ children }) {
   const verifyOTP = async (email, otp) => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/v1/verify-otp",
+        `${API_BASE_URL}/api/v1/verify-otp`,
         { email, otp }
       );
       setTempToken(response.data.token);
@@ -222,7 +225,7 @@ export function AuthProvider({ children }) {
     dispatch({ type: "FORGOT_PASSWORD_START" });
     try {
       const response = await axios.put(
-        "http://localhost:5000/api/v1/reset-password",
+        `${API_BASE_URL}/api/v1/reset-password`,
         { newPassword },
         {
           headers: { Authorization: `Bearer ${tempToken}` },
@@ -254,7 +257,7 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     try {
       await axios.post(
-        "http://localhost:5000/api/v1/logout",
+        `${API_BASE_URL}/api/v1/logout`,
         {},
         {
           withCredentials: true,
@@ -274,7 +277,7 @@ export function AuthProvider({ children }) {
   const validateMFA = async (email, token) => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/v1/mfa/validate",
+        `${API_BASE_URL}/api/v1/mfa/validate`,
         { email, token },
         {
           withCredentials: true,

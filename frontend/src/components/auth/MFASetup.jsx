@@ -3,6 +3,8 @@ import { useAuth } from '../../context/AuthContext';
 import Toast from '../Toast';
 import './AuthForms.css';
 
+const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL;
+
 export default function MFASetup({ onComplete }) {
   const { refreshProfile } = useAuth();
   const [step, setStep] = useState('initial'); // initial, qr, verify
@@ -16,7 +18,7 @@ export default function MFASetup({ onComplete }) {
   const handleGenerateQR = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/v1/mfa/setup', {
+      const response = await fetch(`${API_BASE_URL}/api/v1/mfa/setup`, {
         method: 'GET',
         credentials: 'include',
       });
@@ -44,7 +46,7 @@ export default function MFASetup({ onComplete }) {
     setIsLoading(true);
     
     try {
-      const response = await fetch('http://localhost:5000/api/v1/mfa/verify', {
+      const response = await fetch(`${API_BASE_URL}/api/v1/mfa/verify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

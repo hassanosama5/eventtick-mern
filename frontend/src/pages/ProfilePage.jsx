@@ -6,6 +6,8 @@ import Toast from "../components/Toast";
 import axios from "axios";
 import "./ProfilePage.css";
 
+const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL;
+
 export default function ProfilePage() {
   const { user, refreshProfile, logout } = useAuth();
   const navigate = useNavigate();
@@ -33,20 +35,16 @@ export default function ProfilePage() {
 
   // Refresh profile immediately on mount and periodically to keep MFA status up to date
   useEffect(() => {
-    // Immediate refresh when component mounts or user changes
-    if (user) {
-      refreshProfile();
-    }
+    // Immediate refresh when component mounts
+    refreshProfile();
 
-    // Set up periodic refresh
+    // Set up periodic refresh (every 30 seconds)
     const interval = setInterval(() => {
-      if (user) {
-        refreshProfile();
-      }
-    }, 2000); // Refresh every 2 seconds for more responsiveness
+      refreshProfile();
+    }, 30000); // 30 seconds
 
     return () => clearInterval(interval);
-  }, [user, refreshProfile]);
+  }, [refreshProfile]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -58,7 +56,7 @@ export default function ProfilePage() {
     setIsLoading(true);
     try {
       const response = await axios.put(
-        "http://localhost:5000/api/v1/users/profile",
+        `${API_BASE_URL}/api/v1/users/profile`,
         {
           name: formData.name,
           email: formData.email,
@@ -98,7 +96,7 @@ export default function ProfilePage() {
     setIsLoading(true);
     try {
       const response = await axios.delete(
-        "http://localhost:5000/api/v1/users/me",
+        `${API_BASE_URL}/api/v1/users/me`,
         {
           withCredentials: true,
           headers: { "Content-Type": "application/json" },
@@ -147,7 +145,7 @@ export default function ProfilePage() {
     setIsLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/v1/mfa/disable",
+        `${API_BASE_URL}/api/v1/mfa/disable`,
         {},
         {
           withCredentials: true,

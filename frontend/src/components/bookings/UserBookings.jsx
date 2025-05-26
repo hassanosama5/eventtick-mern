@@ -29,6 +29,8 @@ import { useNavigate } from "react-router-dom";
 // Ensure axios sends cookies with every request
 axios.defaults.withCredentials = true;
 
+const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL;
+
 const UserBookings = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -43,7 +45,7 @@ const UserBookings = () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `http://localhost:5000/api/v1/users/bookings`
+        `${API_BASE_URL}/api/v1/users/bookings`
       );
       setBookings(response.data.data);
       setLoading(false);
@@ -110,7 +112,7 @@ const UserBookings = () => {
     if (!bookingToCancel) return;
     try {
       await axios.delete(
-        `http://localhost:5000/api/v1/bookings/${bookingToCancel}`
+        `${API_BASE_URL}/api/v1/bookings/${bookingToCancel}`
       );
       setBookings(
         bookings.filter((booking) => booking._id !== bookingToCancel)

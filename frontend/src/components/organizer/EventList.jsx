@@ -6,6 +6,8 @@ import "./EventList.css";
 import EventCard from "../events/EventCard";
 import { Button, ButtonGroup, TextField, MenuItem, Box, Grid } from "@mui/material";
 
+const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL;
+
 const OrganizerEventList = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
@@ -47,7 +49,7 @@ const OrganizerEventList = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          "http://localhost:5000/api/v1/events/organizer", 
+          `${API_BASE_URL}/api/v1/events/organizer`, 
           { withCredentials: true }
         );
 
@@ -74,7 +76,7 @@ const OrganizerEventList = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/v1/events/${id}`, {
+      await axios.delete(`${API_BASE_URL}/api/v1/events/${id}`, {
         withCredentials: true,
       });
       setEvents(events.filter((event) => event._id !== id));
