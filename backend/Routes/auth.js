@@ -23,6 +23,17 @@ router.post("/verify-otp", authController.verifyOTP); // Step 2
 router.put("/reset-password", protect, authController.resetPassword); // Step 3
 //} //hateen hena protect ashan elmfrod after verifying el otp ykoon maah tokennn (flcookie)
 
+// ========== MFA Routes ========== //
+// MFA Setup Flow
+router.get("/mfa/setup", protect, authController.generateMFASecret); // Get QR code
+router.post("/mfa/verify", protect, authController.verifyMFASetup); // Verify setup
+
+// MFA Validation (during login)
+router.post("/mfa/validate", authController.validateMFAToken); // No protect middleware (uses temp token)
+
+// MFA Management
+router.post("/mfa/disable", protect, authController.disableMFA); // Turn off MFA
+
 // Test routes for different roles
 router.get("/test/public", (req, res) => {
   res.json({

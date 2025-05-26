@@ -241,14 +241,6 @@ exports.deleteUser = async (req, res) => {
 // User self-delete account
 exports.deleteMyAccount = async (req, res) => {
   try {
-    // Verify the user is deleting their own account
-    if (req.params.id !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: "You can only delete your own account",
-      });
-    }
-
     const user = await User.findByIdAndDelete(req.user.id);
     if (!user) {
       return res.status(404).json({
@@ -257,6 +249,7 @@ exports.deleteMyAccount = async (req, res) => {
       });
     }
 
+    // Delete all associated bookings and events
     await Booking.deleteMany({ user: req.user.id });
     await Event.deleteMany({ organizer: req.user.id });
 

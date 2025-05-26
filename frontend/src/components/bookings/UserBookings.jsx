@@ -3,7 +3,6 @@ import {
   Container,
   Typography,
   Box,
-  CircularProgress,
   Alert,
   Paper,
   List,
@@ -51,66 +50,27 @@ const UserBookings = () => {
     } catch (err) {
       setError(
         err.response?.data?.message ||
-          "Failed to fetch bookings. Please log in."
+          "Failed to fetch bookings. Please try again."
       );
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchBookings();
-  }, []);
-
-  useEffect(() => {
-    if (user && user.role !== "standard") {
-      setToast({
-        message: "Organizers and admins do not have bookings. Only standard users can view bookings.",
-        type: "error",
-      });
+    if (user && user.role === 'standard') {
+      fetchBookings();
     }
   }, [user]);
 
-  const handleCancelClick = (bookingId) => {
-    setBookingToCancel(bookingId);
-    setOpenCancelDialog(true);
-  };
-
-  const handleCloseCancelDialog = () => {
-    setOpenCancelDialog(false);
-    setBookingToCancel(null);
-  };
-
-  const handleConfirmCancel = async () => {
-    if (!bookingToCancel) return;
-    try {
-      await axios.delete(
-        `http://localhost:5000/api/v1/bookings/${bookingToCancel}`
-      );
-      setBookings(
-        bookings.filter((booking) => booking._id !== bookingToCancel)
-      );
-      setToast({ message: "Booking cancelled successfully.", type: "success" });
-      handleCloseCancelDialog();
-    } catch (err) {
-      setToast({ message: err.response?.data?.message || "Failed to cancel booking. Please try again.", type: "error" });
-      setError(
-        err.response?.data?.message ||
-          "Failed to cancel booking. Please try again."
-      );
-      handleCloseCancelDialog();
-    }
-  };
-
-  // Redirect after toast closes
-  const handleToastClose = () => {
-    setToast(null);
-    navigate("/"); // Redirect to home page, change if you want a different page
-  };
-
-  if (user && user.role !== "standard") {
-    return toast ? (
-      <Toast message={toast.message} type={toast.type} onClose={handleToastClose} />
-    ) : null;
+  // Handle unauthorized access
+  if (!user || user.role !== 'standard') {
+    return (
+      <Container>
+        <Alert severity="error" sx={{ mt: 2 }}>
+          Only standard users can view bookings. Please log in with a standard user account.
+        </Alert>
+      </Container>
+    );
   }
 
   if (loading) {
@@ -136,8 +96,42 @@ const UserBookings = () => {
     );
   }
 
+  const handleCancelClick = (bookingId) => {
+    setBookingToCancel(bookingId);
+    setOpenCancelDialog(true);
+  };
+
+  const handleCloseCancelDialog = () => {
+    setOpenCancelDialog(false);
+    setBookingToCancel(null);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!bookingToCancel) return;
+    try {
+      await axios.delete(
+        `http://localhost:5000/api/v1/bookings/${bookingToCancel}`
+      );
+      setBookings(
+        bookings.filter((booking) => booking._id !== bookingToCancel)
+      );
+      setToast({ message: "Booking cancelled successfully.", type: "success" });
+      handleCloseCancelDialog();
+    } catch (err) {
+      setToast({ 
+        message: err.response?.data?.message || "Failed to cancel booking. Please try again.", 
+        type: "error" 
+      });
+      handleCloseCancelDialog();
+    }
+  };
+
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+      )}
+
       <Typography variant="h4" component="h1" gutterBottom>
         My Bookings
       </Typography>
@@ -211,10 +205,6 @@ const UserBookings = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
-      )}
     </Container>
   );
 };

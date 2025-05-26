@@ -18,6 +18,8 @@ import RegisterForm from "./components/auth/RegisterForm";
 import AdminRegisterForm from "./components/auth/AdminRegisterForm";
 import ForgotPassword from "./components/auth/ForgotPassword";
 import Unauthorized from "./components/Unauthorized";
+import MFAVerification from './components/auth/MFAVerification';
+import MFASettings from './components/auth/MFASettings';
 
 // User Pages
 import HomePage from "./pages/HomePage";
@@ -146,6 +148,7 @@ function App() {
             <Route element={<PrivateRoute />}>
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/my-bookings" element={<UserBookings />} />
+              <Route path="/settings" element={<MFASettings />} />
             </Route>
 
             {/* Organizer Routes */}

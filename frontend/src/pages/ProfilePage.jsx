@@ -1,15 +1,22 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import MFASetup from "../components/auth/MFASetup";
+import Toast from "../components/Toast";
+import axios from "axios";
 import "./ProfilePage.css";
 
 export default function ProfilePage() {
-  const { user, logout } = useAuth();
+  const { user, refreshProfile, logout } = useAuth();
   const navigate = useNavigate();
+  const [showMFASetup, setShowMFASetup] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     role: "",
+    mfaEnabled: false,
   });
 
   // Initialize form with user data
@@ -19,9 +26,27 @@ export default function ProfilePage() {
         name: user.name || "",
         email: user.email || "",
         role: user.role || "user",
+        mfaEnabled: user.mfaEnabled || false,
       });
     }
   }, [user]);
+
+  // Refresh profile immediately on mount and periodically to keep MFA status up to date
+  useEffect(() => {
+    // Immediate refresh when component mounts or user changes
+    if (user) {
+      refreshProfile();
+    }
+
+    // Set up periodic refresh
+    const interval = setInterval(() => {
+      if (user) {
+        refreshProfile();
+      }
+    }, 2000); // Refresh every 2 seconds for more responsiveness
+
+    return () => clearInterval(interval);
+  }, [user, refreshProfile]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,19 +55,122 @@ export default function ProfilePage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add your profile update API call here
-    alert("Profile updated successfully!");
+    setIsLoading(true);
+    try {
+      const response = await axios.put(
+        "http://localhost:5000/api/v1/users/profile",
+        {
+          name: formData.name,
+          email: formData.email,
+        },
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (response.data.success) {
+        await refreshProfile();
+        setToast({
+          message: "Profile updated successfully!",
+          type: "success"
+        });
+      } else {
+        throw new Error(response.data.message || "Failed to update profile");
+      }
+    } catch (error) {
+      setToast({
+        message: error.response?.data?.message || "Failed to update profile",
+        type: "error"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDeleteAccount = () => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete your account? This cannot be undone."
-      )
-    ) {
-      // Add account deletion API call here
-      logout();
-      navigate("/");
+  const handleDeleteAccount = async () => {
+    if (!window.confirm(
+      "Are you sure you want to delete your account? This cannot be undone."
+    )) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await axios.delete(
+        "http://localhost:5000/api/v1/users/me",
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (response.data.success) {
+        setToast({
+          message: "Your account has been deleted successfully.",
+          type: "success"
+        });
+        
+        // Wait a bit for the toast to be visible before logging out
+        setTimeout(() => {
+          logout();
+          navigate("/");
+        }, 1500);
+      } else {
+        throw new Error(response.data.message || "Failed to delete account");
+      }
+    } catch (error) {
+      console.error("Delete account error:", error);
+      setToast({
+        message: error.response?.data?.message || "Failed to delete account",
+        type: "error"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleMFASetupComplete = async () => {
+    setShowMFASetup(false);
+    await refreshProfile(); // Refresh immediately after MFA setup
+    setToast({
+      message: "MFA setup completed successfully!",
+      type: "success"
+    });
+  };
+
+  const handleDisableMFA = async () => {
+    if (!window.confirm("Are you sure you want to disable two-factor authentication? This will make your account less secure.")) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/v1/mfa/disable",
+        {},
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (response.data.success) {
+        await refreshProfile();
+        setToast({
+          message: "Two-factor authentication has been disabled",
+          type: "success"
+        });
+      } else {
+        throw new Error(response.data.message || "Failed to disable 2FA");
+      }
+    } catch (error) {
+      setToast({
+        message: error.response?.data?.message || "Failed to disable 2FA",
+        type: "error"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -54,12 +182,27 @@ export default function ProfilePage() {
     );
   }
 
+  if (showMFASetup) {
+    return <MFASetup onComplete={handleMFASetupComplete} />;
+  }
+
+  // Always use user.mfaEnabled instead of formData.mfaEnabled for the current status
+  const mfaEnabled = user.mfaEnabled || false;
+
   return (
     <div className="profile-container">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+      
       <div className="profile-header">
         <h1>My Profile</h1>
         <div className="avatar">
-          {user && user.name ? user.name.charAt(0).toUpperCase() : ""}
+          {formData.name ? formData.name.charAt(0).toUpperCase() : ""}
         </div>
       </div>
 
@@ -90,40 +233,60 @@ export default function ProfilePage() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="role">Account Type</label>
-          <select
+          <label htmlFor="role">Role</label>
+          <input
+            type="text"
             id="role"
             name="role"
             value={formData.role}
-            onChange={handleChange}
             disabled
-          >
-            <option value="user">Event Attendee</option>
-            <option value="organizer">Event Organizer</option>
-            <option value="admin">Administrator</option>
-          </select>
+          />
+        </div>
+
+        <div className="security-section">
+          <h2>Security Settings</h2>
+          <div className="mfa-status">
+            <p>Two-Factor Authentication: {mfaEnabled ? 'Enabled' : 'Disabled'}</p>
+            {mfaEnabled ? (
+              <button
+                type="button"
+                onClick={handleDisableMFA}
+                className="danger-btn"
+                disabled={isLoading}
+              >
+                Disable 2FA
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowMFASetup(true)}
+                className="secondary-btn"
+                disabled={isLoading}
+              >
+                Set up 2FA
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="form-actions">
-          <button type="submit" className="btn update-btn">
-            Update Profile
+          <button 
+            type="submit" 
+            className="submit-btn"
+            disabled={isLoading}
+          >
+            {isLoading ? "Updating..." : "Update Profile"}
           </button>
-          <button type="button" className="btn logout-btn" onClick={logout}>
-            Log Out
+          <button
+            type="button"
+            onClick={handleDeleteAccount}
+            className="delete-btn"
+            disabled={isLoading}
+          >
+            Delete Account
           </button>
         </div>
       </form>
-
-      <div className="danger-zone">
-        <h3>Danger Zone</h3>
-        <button className="btn delete-btn" onClick={handleDeleteAccount}>
-          Delete Account
-        </button>
-        <p className="warning-text">
-          Warning: This will permanently remove your account and all associated
-          data.
-        </p>
-      </div>
     </div>
   );
 }

@@ -30,6 +30,18 @@ const userSchema = new mongoose.Schema(
     },
     resetPasswordOTP: String, // Stores the OTP code
     resetPasswordExpires: Date,
+    mfaEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    mfaSecret: {
+      type: String,
+      select: false, // Never return this in queries
+    },
+    mfaRecoveryCodes: {
+      type: [String],
+      select: false,
+    },
   },
   { timestamps: true }
 );

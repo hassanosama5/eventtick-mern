@@ -16,6 +16,8 @@ const initialState = {
   isAuthenticated: false,
   isLoading: true,
   error: null,
+  mfaRequired: false,
+  mfaEmail: null,
 };
 
 function reducer(state, action) {
@@ -23,6 +25,7 @@ function reducer(state, action) {
     case "LOGIN_START":
     case "REGISTER_START":
     case "FORGOT_PASSWORD_START":
+    case "REFRESH_START":
       return { ...state, isLoading: true, error: null };
     case "AUTH_SUCCESS":
       return {
@@ -30,65 +33,115 @@ function reducer(state, action) {
         user: action.payload,
         isAuthenticated: true,
         isLoading: false,
+        error: null,
       };
     case "AUTH_FAILURE":
-      return { ...state, error: action.payload, isLoading: false };
+      return { 
+        ...state, 
+        user: null,
+        isAuthenticated: false,
+        error: action.payload, 
+        isLoading: false 
+      };
     case "LOGOUT":
       return { ...initialState, isLoading: false };
     case "FORGOT_PASSWORD_SUCCESS":
       return { ...state, isLoading: false, error: null };
+    case "MFA_REQUIRED":
+      return {
+        ...state,
+        mfaRequired: true,
+        mfaEmail: action.payload.email,
+        isLoading: false,
+      };
+    case "MFA_RESET":
+      return {
+        ...state,
+        mfaRequired: false,
+        mfaEmail: null,
+      };
     default:
-      throw new Error("Unknown action type");
+      throw new Error(`Unknown action type: ${action.type}`);
   }
 }
 
 export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const [tempToken, setTempToken] = useState(null); // <-- tempToken for reset flow
-  const [resetEmail, setResetEmail] = useState(null); // Add this line
-
+  const [tempToken, setTempToken] = useState(null);
+  const [resetEmail, setResetEmail] = useState(null);
   const navigate = useNavigate();
 
-  // Check if user is logged in on app load
+  const refreshProfile = async () => {
+    try {
+      dispatch({ type: "REFRESH_START" });
+      const response = await axios.get(
+        "http://localhost:5000/api/v1/users/profile",
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      
+      if (response.data.success) {
+        dispatch({ type: "AUTH_SUCCESS", payload: response.data.data });
+      } else {
+        throw new Error(response.data.message || "Failed to fetch profile");
+      }
+    } catch (error) {
+      console.error("Profile refresh error:", error);
+      dispatch({ 
+        type: "AUTH_FAILURE", 
+        payload: error.response?.data?.message || "Failed to refresh profile" 
+      });
+    }
+  };
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        dispatch({ type: "LOGIN_START" });
         const response = await axios.get(
           "http://localhost:5000/api/v1/users/profile",
           {
             withCredentials: true,
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
           }
         );
-        dispatch({ type: "AUTH_SUCCESS", payload: response.data.data });
-        // eslint-disable-next-line no-unused-vars
-      } catch (err) {
-        // Clear invalid credentials
-        document.cookie =
-          "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        dispatch({ type: "LOGOUT" });
+        
+        if (response.data.success) {
+          dispatch({ type: "AUTH_SUCCESS", payload: response.data.data });
+        } else {
+          throw new Error(response.data.message || "Failed to fetch profile");
+        }
+      } catch (error) {
+        console.error("Profile fetch error:", error);
+        document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        dispatch({ 
+          type: "AUTH_FAILURE", 
+          payload: error.response?.data?.message || "Failed to fetch profile" 
+        });
       }
     };
-
     checkAuth();
   }, []);
 
-  // Register
   const register = async (name, email, password, role) => {
     dispatch({ type: "REGISTER_START" });
     try {
       const response = await axios.post(
         "http://localhost:5000/api/v1/register",
+        { name, email, password, role },
         {
-          name,
-          email,
-          password,
-          role,
+          withCredentials: true,
+          headers: { "Content-Type": "application/json" },
         }
       );
-      dispatch({ type: "AUTH_SUCCESS", payload: response.data });
+      
+      if (response.data.success) {
+        dispatch({ type: "AUTH_SUCCESS", payload: response.data.data });
+      } else {
+        throw new Error(response.data.message || "Registration failed");
+      }
     } catch (err) {
       dispatch({
         type: "AUTH_FAILURE",
@@ -98,7 +151,6 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Login
   const login = async (email, password) => {
     dispatch({ type: "LOGIN_START" });
     try {
@@ -107,17 +159,24 @@ export function AuthProvider({ children }) {
         { email, password },
         {
           withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
         }
       );
 
-      // Store token in memory (not localStorage for security)
-      dispatch({ type: "AUTH_SUCCESS", payload: response.data.data });
-      // Removed navigate("/") to allow LoginForm to handle navigation after toast
+      if (response.data.mfaRequired) {
+        dispatch({
+          type: "MFA_REQUIRED",
+          payload: { email },
+        });
+        return;
+      }
+
+      if (response.data.success) {
+        dispatch({ type: "AUTH_SUCCESS", payload: response.data.data });
+      } else {
+        throw new Error(response.data.message || "Login failed");
+      }
     } catch (err) {
-      console.error("Login error:", err.response?.data);
       dispatch({
         type: "AUTH_FAILURE",
         payload: err.response?.data?.message || "Login failed",
@@ -126,14 +185,13 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Forgot Password (Step 1)
   const forgotPassword = async (email) => {
     dispatch({ type: "FORGOT_PASSWORD_START" });
     try {
       await axios.put("http://localhost:5000/api/v1/forgotPassword", { email });
       setResetEmail(email);
       dispatch({ type: "FORGOT_PASSWORD_SUCCESS" });
-      return true; // Success
+      return true;
     } catch (err) {
       dispatch({
         type: "AUTH_FAILURE",
@@ -143,17 +201,13 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Verify OTP (Step 2)
   const verifyOTP = async (email, otp) => {
     try {
       const response = await axios.post(
         "http://localhost:5000/api/v1/verify-otp",
-        {
-          email,
-          otp,
-        }
+        { email, otp }
       );
-      setTempToken(response.data.token); // <-- Save the tempToken here
+      setTempToken(response.data.token);
       return true;
     } catch (err) {
       dispatch({
@@ -171,68 +225,76 @@ export function AuthProvider({ children }) {
         "http://localhost:5000/api/v1/reset-password",
         { newPassword },
         {
-          headers: {
-            Authorization: `Bearer ${tempToken}`,
-          },
+          headers: { Authorization: `Bearer ${tempToken}` },
         }
       );
 
-      // Clear the temp token after successful reset
       setTempToken(null);
 
-      // Attempt automatic login with better error handling
       if (resetEmail) {
         try {
-          await new Promise((resolve) => setTimeout(resolve, 1000)); // Increased delay
-          console.log(
-            "DEBUG: Auto-login attempt - email:",
-            resetEmail,
-            "password:",
-            newPassword
-          );
+          await new Promise((resolve) => setTimeout(resolve, 1000));
           await login(resetEmail, newPassword);
         } catch (loginError) {
           console.error("Auto-login after reset failed:", loginError);
-          // Don't throw here, just log the error and let the user try logging in manually
         }
       }
 
       dispatch({ type: "FORGOT_PASSWORD_SUCCESS" });
       return response.data;
     } catch (err) {
-      const errorMsg = err.response?.data?.message || "Reset failed";
       dispatch({
         type: "AUTH_FAILURE",
-        payload: errorMsg,
+        payload: err.response?.data?.message || "Reset failed",
       });
-      throw new Error(errorMsg);
+      throw err;
     }
   };
 
-  // Logout
   const logout = async () => {
     try {
       await axios.post(
-        "http://localhost:5000/api/v1/logout", // Updated endpoint
+        "http://localhost:5000/api/v1/logout",
         {},
         {
           withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      dispatch({ type: "LOGOUT" });
+      document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      navigate("/login");
+    } catch (err) {
+      dispatch({ type: "LOGOUT" });
+      document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      navigate("/login");
+    }
+  };
+
+  const validateMFA = async (email, token) => {
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/v1/mfa/validate",
+        { email, token },
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "application/json" },
         }
       );
 
-      // Clear frontend state
-      dispatch({ type: "LOGOUT" });
-      localStorage.removeItem("user"); // If you store user data
-
-      navigate("/login");
+      if (response.data.success) {
+        dispatch({ type: "AUTH_SUCCESS", payload: response.data.data });
+        dispatch({ type: "MFA_RESET" });
+        return response.data;
+      } else {
+        throw new Error(response.data.message || "MFA validation failed");
+      }
     } catch (err) {
-      console.error("Logout error:", err);
-      // Force logout even if API fails
-      dispatch({ type: "LOGOUT" });
-      navigate("/login");
+      dispatch({
+        type: "AUTH_FAILURE",
+        payload: err.response?.data?.message || "MFA validation failed",
+      });
+      throw err;
     }
   };
 
@@ -246,10 +308,12 @@ export function AuthProvider({ children }) {
         forgotPassword,
         verifyOTP,
         resetPassword,
-        tempToken, // <-- exposed for use elsewhere if needed eltemp token elbteegi after eluser ydakhal correct otp
-        setTempToken, // <-- exposed in case you want to clear manually
-        resetEmail, // Expose if needed
-        setResetEmail, // Expose if needed
+        tempToken,
+        setTempToken,
+        resetEmail,
+        setResetEmail,
+        validateMFA,
+        refreshProfile,
       }}
     >
       {children}

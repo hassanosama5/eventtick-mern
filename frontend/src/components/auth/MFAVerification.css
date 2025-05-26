@@ -1,0 +1,86 @@
+.mfa-verification-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding: 20px;
+}
+
+.mfa-verification-box {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+.mfa-verification-box h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.mfa-verification-box p {
+  text-align: center;
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+.mfa-verification-box input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 1rem;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  font-size: 1.1rem;
+  text-align: center;
+  letter-spacing: 0.2em;
+  transition: border-color 0.3s ease;
+}
+
+.mfa-verification-box input:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.mfa-verification-box button {
+  width: 100%;
+  padding: 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.mfa-verification-box button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.mfa-verification-box button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.switch-method-btn {
+  margin-top: 1rem;
+  background-color: transparent !important;
+  color: #007bff !important;
+  text-decoration: underline;
+}
+
+.switch-method-btn:hover {
+  background-color: #f8f9fa !important;
+  color: #0056b3 !important;
+}
+
+.error-message {
+  color: #dc3545;
+  text-align: center;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+} 

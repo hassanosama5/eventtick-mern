@@ -3,6 +3,8 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
+const speakeasy = require("speakeasy");
+const QRCode = require("qrcode");
 
 // Generate JWT Token
 const generateToken = (user) => {
@@ -205,6 +207,7 @@ exports.adminRegister = async (req, res) => {
 // @desc    Login user
 // @route   POST /api/v1/login
 // @route   POST /api/v1/login
+// Modify your login function to handle MFA
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -219,39 +222,46 @@ exports.login = async (req, res) => {
     }
 
     // Find user and explicitly select password
-    console.log("Finding user with email:", email);
     const user = await User.findOne({ email }).select("+password");
-    console.log("User found:", !!user);
 
     if (!user) {
-      console.log("No user found with this email");
       return res.status(401).json({
         success: false,
         message: "Invalid credentials",
       });
     }
 
-    console.log("Stored hashed password:", user.password);
-    console.log("Attempting password comparison with:", password);
-
-    // Verify password using bcrypt directly
+    // Verify password
     const isMatch = await bcrypt.compare(password, user.password);
-    console.log("Password match result:", isMatch);
-
     if (!isMatch) {
-      console.log("Password does not match");
       return res.status(401).json({
         success: false,
         message: "Invalid credentials",
       });
     }
 
-    console.log("Login successful");
+    if (user.mfaEnabled) {
+      // Set temp MFA verification cookie instead of returning token
+      const tempToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: "5m",
+      });
 
-    // Generate token
+      res
+        .cookie("mfa_verification", tempToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+          maxAge: 300000, // 5 minutes
+        })
+        .json({
+          success: true,
+          mfaRequired: true,
+          message: "MFA authentication required",
+        });
+    }
+
+    // If no MFA, proceed with regular login
     const token = generateToken(user);
-
-    console.log(token);
 
     res
       .cookie("token", token, {
@@ -453,6 +463,243 @@ exports.logout = (req, res) => {
     res.status(500).json({
       success: false,
       message: "Logout failed",
+    });
+  }
+};
+
+// @desc    Generate MFA secret and QR code
+// @route   GET /api/v1/mfa/setup
+exports.generateMFASecret = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Generate a secret
+    const secret = speakeasy.generateSecret({
+      name: `Tazkarti (${user.email})`,
+    });
+
+    // Generate QR code URL
+    const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url);
+
+    // Save the secret temporarily (don't enable MFA yet)
+    user.mfaSecret = secret.base32;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        qrCodeUrl,
+        secret: secret.base32, // For manual entry if needed
+        mfaEnabled: user.mfaEnabled,
+      },
+    });
+  } catch (error) {
+    console.error("MFA setup error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error setting up MFA",
+    });
+  }
+};
+
+// @desc    Verify MFA setup
+// @route   POST /api/v1/mfa/verify
+exports.verifyMFASetup = async (req, res) => {
+  try {
+    const { token } = req.body;
+    const user = await User.findById(req.user.id).select("+mfaSecret");
+
+    if (!user || !user.mfaSecret) {
+      return res.status(400).json({
+        success: false,
+        message: "MFA not set up for this user",
+      });
+    }
+
+    // Verify the token
+    const verified = speakeasy.totp.verify({
+      secret: user.mfaSecret,
+      encoding: "base32",
+      token,
+      window: 1, // Allow 1 step (30s) in either direction
+    });
+
+    if (!verified) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid MFA token",
+      });
+    }
+
+    // Generate recovery codes
+    const recoveryCodes = Array.from({ length: 8 }, () =>
+      crypto.randomBytes(4).toString("hex").toUpperCase()
+    );
+
+    // Enable MFA for the user
+    user.mfaEnabled = true;
+    user.mfaRecoveryCodes = recoveryCodes;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        recoveryCodes, // Important! Show these to the user once
+        mfaEnabled: user.mfaEnabled,
+      },
+    });
+  } catch (error) {
+    console.error("MFA verification error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error verifying MFA setup",
+    });
+  }
+};
+
+// @desc    Disable MFA
+// @route   POST /api/v1/mfa/disable
+exports.disableMFA = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+
+    user.mfaEnabled = false;
+    user.mfaSecret = undefined;
+    user.mfaRecoveryCodes = undefined;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "MFA disabled successfully",
+      data: {
+        mfaEnabled: false,
+      },
+    });
+  } catch (error) {
+    console.error("MFA disable error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error disabling MFA",
+    });
+  }
+};
+
+// @desc    Verify MFA token during login
+// @route   POST /api/v1/mfa/validate
+exports.validateMFAToken = async (req, res) => {
+  try {
+    const { email, token } = req.body;
+    const tempToken = req.cookies.mfa_verification; // Get from cookie
+
+    // Verify temp token first
+    if (!tempToken) {
+      return res.status(401).json({
+        success: false,
+        message: "MFA session expired or invalid",
+      });
+    }
+
+    const decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+    const user = await User.findOne({
+      _id: decoded.id,
+      email,
+    }).select("+mfaSecret +mfaRecoveryCodes");
+
+    if (!user || !user.mfaEnabled) {
+      return res.status(400).json({
+        success: false,
+        message: "MFA not enabled for this user",
+      });
+    }
+
+    // Check recovery codes first
+    if (user.mfaRecoveryCodes.includes(token)) {
+      user.mfaRecoveryCodes = user.mfaRecoveryCodes.filter((c) => c !== token);
+      await user.save();
+
+      const authToken = generateToken(user);
+
+      return res
+        .clearCookie("mfa_verification")
+        .cookie("token", authToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        })
+        .json({
+          success: true,
+          data: {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            usedRecoveryCode: true,
+          },
+        });
+    }
+
+    // Verify TOTP code
+    const verified = speakeasy.totp.verify({
+      secret: user.mfaSecret,
+      encoding: "base32",
+      token,
+      window: 1,
+    });
+
+    if (!verified) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid MFA token",
+      });
+    }
+
+    // Successful verification
+    const authToken = generateToken(user);
+
+    res
+      .clearCookie("mfa_verification")
+      .cookie("token", authToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      })
+      .json({
+        success: true,
+        data: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+      });
+  } catch (error) {
+    console.error("MFA validation error:", error);
+
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        success: false,
+        message: "MFA session expired",
+      });
+    }
+
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid MFA session",
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Error validating MFA token",
     });
   }
 };
