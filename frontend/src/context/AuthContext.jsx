@@ -160,15 +160,7 @@ export function AuthProvider({ children }) {
     try {
       const response = await axios.post(
         `${API_BASE_URL}/api/v1/login`,
-        { email, password },
-        {
-          withCredentials: true,
-          credentials: 'include',
-          headers: { 
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-        }
+        { email, password }
       );
 
       if (response.data.mfaRequired) {
@@ -286,15 +278,7 @@ export function AuthProvider({ children }) {
     try {
       const response = await axios.post(
         `${API_BASE_URL}/api/v1/mfa/validate`,
-        { email, token },
-        {
-          withCredentials: true,
-          credentials: 'include',
-          headers: { 
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-        }
+        { email, token }
       );
 
       if (response.data.success) {

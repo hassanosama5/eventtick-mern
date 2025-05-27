@@ -241,20 +241,16 @@ exports.login = async (req, res) => {
     }
 
     if (user.mfaEnabled) {
-      // Set temp MFA verification cookie instead of returning token
       const tempToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
         expiresIn: "5m",
       });
 
       return res
-        .clearCookie("mfa_verification")
-        .clearCookie("token")
         .cookie("mfa_verification", tempToken, {
           httpOnly: true,
           secure: true,
-          sameSite: "none",
-          domain: process.env.COOKIE_DOMAIN || undefined,
-          maxAge: 5 * 60 * 1000, // 5 minutes
+          sameSite: 'none',
+          maxAge: 300000 // 5 minutes
         })
         .json({
           success: true,
@@ -267,13 +263,11 @@ exports.login = async (req, res) => {
     const token = generateToken(user);
 
     return res
-      .clearCookie("mfa_verification")
       .cookie("token", token, {
         httpOnly: true,
         secure: true,
-        sameSite: "none",
-        domain: process.env.COOKIE_DOMAIN || undefined,
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        sameSite: 'none',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       })
       .json({
         success: true,
@@ -281,7 +275,7 @@ exports.login = async (req, res) => {
           _id: user._id,
           name: user.name,
           email: user.email,
-          role: user.role,
+          role: user.role
         },
       });
   } catch (error) {
@@ -631,12 +625,10 @@ exports.validateMFAToken = async (req, res) => {
 
       return res
         .clearCookie("mfa_verification")
-        .clearCookie("token")
         .cookie("token", authToken, {
           httpOnly: true,
           secure: true,
-          sameSite: "none",
-          domain: process.env.COOKIE_DOMAIN || undefined,
+          sameSite: 'none',
           maxAge: 7 * 24 * 60 * 60 * 1000
         })
         .json({
@@ -671,12 +663,10 @@ exports.validateMFAToken = async (req, res) => {
 
     res
       .clearCookie("mfa_verification")
-      .clearCookie("token")
       .cookie("token", authToken, {
         httpOnly: true,
         secure: true,
-        sameSite: "none",
-        domain: process.env.COOKIE_DOMAIN || undefined,
+        sameSite: 'none',
         maxAge: 7 * 24 * 60 * 60 * 1000
       })
       .json({

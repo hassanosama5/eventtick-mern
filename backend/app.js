@@ -10,16 +10,15 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cookieParser(process.env.JWT_SECRET));
+app.use(cookieParser());
 app.use(express.json());
 
 // CORS Configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
+  origin: true, // Allow all origins for now
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  exposedHeaders: ['set-cookie'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 app.use(express.urlencoded({ extended: true }));
