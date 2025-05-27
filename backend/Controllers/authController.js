@@ -263,7 +263,7 @@ exports.login = async (req, res) => {
     // If no MFA, proceed with regular login
     const token = generateToken(user);
 
-    res
+    return res
       .cookie("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -295,8 +295,8 @@ const generateOTP = () => crypto.randomInt(100000, 999999).toString();
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "tazkarti.seproject@gmail.com",
-    pass: "jafk bvjg rdzq wltb",
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
 
