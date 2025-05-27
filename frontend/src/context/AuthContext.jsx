@@ -23,6 +23,9 @@ const initialState = {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+// Configure axios defaults
+axios.defaults.withCredentials = true;
+
 function reducer(state, action) {
   switch (action.type) {
     case "LOGIN_START":
@@ -160,7 +163,11 @@ export function AuthProvider({ children }) {
         { email, password },
         {
           withCredentials: true,
-          headers: { "Content-Type": "application/json" },
+          credentials: 'include',
+          headers: { 
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
         }
       );
 
@@ -178,6 +185,7 @@ export function AuthProvider({ children }) {
         throw new Error(response.data.message || "Login failed");
       }
     } catch (err) {
+      console.error("Login error:", err);
       dispatch({
         type: "AUTH_FAILURE",
         payload: err.response?.data?.message || "Login failed",
@@ -297,6 +305,7 @@ export function AuthProvider({ children }) {
         throw new Error(response.data.message || "MFA validation failed");
       }
     } catch (err) {
+      console.error("MFA validation error:", err);
       dispatch({
         type: "AUTH_FAILURE",
         payload: err.response?.data?.message || "MFA validation failed",
