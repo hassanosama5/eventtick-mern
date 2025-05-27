@@ -282,7 +282,7 @@ const EventList = ({ events: initialEvents }) => {
                   md={4}
                   style={{ display: 'flex', justifyContent: 'center' }}
                 >
-                  <EventCard event={event} viewMode={viewMode} />
+                  <EventCard event={event} viewMode={viewMode} showStatusChip={false} />
                 </Grid>
               ))}
             </Grid>

@@ -36,7 +36,8 @@ const EventCard = ({
   onView,
   onEdit,
   onAnalytics,
-  onDelete
+  onDelete,
+  showStatusChip = true
 }) => {
   console.log('EventCard received event prop:', event);
   const [isSaved, setIsSaved] = useState(false);
@@ -323,7 +324,7 @@ const EventCard = ({
             }}
           />
           {/* Status chip (top right) */}
-          {status && (
+          {showStatusChip && status && (
             <Chip
               label={status.charAt(0).toUpperCase() + status.slice(1)}
               color={
