@@ -247,11 +247,16 @@ exports.login = async (req, res) => {
       });
 
       return res
-        .cookie("mfa_verification", tempToken, {
+        .clearCookie("mfa_verification", {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
-          sameSite: "strict",
-          maxAge: 300000, // 5 minutes
+          sameSite: "lax",
+        })
+        .cookie("token", authToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 7 * 24 * 60 * 60 * 1000,
         })
         .json({
           success: true,
@@ -267,7 +272,7 @@ exports.login = async (req, res) => {
       .cookie("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
       .json({
