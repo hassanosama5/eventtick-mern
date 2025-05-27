@@ -425,6 +425,13 @@ const EventCard = ({
       </Link>
       {/* Card actions at the bottom, always visible */}
       <CardActions disableSpacing sx={{ mt: 'auto', justifyContent: showActions ? 'space-between' : 'center', pt: 0, p: 2, flexShrink: 0 }}>
+        {/* Admin Approve/Decline for grid view */}
+        {showActions && status === 'pending' && (
+          <ButtonGroup variant="contained" size="small" aria-label="event status actions" sx={{ mb: showOrganizerActions ? 1 : 0 }}>
+            <Button color="success" onClick={e => { e.stopPropagation(); onApprove(_id); }}>Approve</Button>
+            <Button color="error" onClick={e => { e.stopPropagation(); onDecline(_id); }}>Decline</Button>
+          </ButtonGroup>
+        )}
         {showOrganizerActions && (
           <Box sx={{ display: 'flex', gap: 1, width: '100%', justifyContent: 'center' }}>
             <Button
