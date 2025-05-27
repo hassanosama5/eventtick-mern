@@ -20,6 +20,7 @@ import ForgotPassword from "./components/auth/ForgotPassword";
 import Unauthorized from "./components/Unauthorized";
 import MFAVerification from './components/auth/MFAVerification';
 import MFASettings from './components/auth/MFASettings';
+import TestMFA from './components/auth/TestMFA';
 
 // User Pages
 import HomePage from "./pages/HomePage";
@@ -175,6 +176,11 @@ function App() {
               <Route path="/admin/events" element={<AdminEvents />} />
               <Route path="/admin/users" element={<AdminUsersPage />} />
             </Route>
+
+            {/* Test Route */}
+            {process.env.NODE_ENV === 'development' && (
+              <Route path="/test-mfa" element={<TestMFA />} />
+            )}
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,52 +1,55 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
+import Toast from '../Toast';
 import './MFAVerification.css';
 
 const MFAVerification = () => {
   const [token, setToken] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [showRecoveryInput, setShowRecoveryInput] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState(null);
   const navigate = useNavigate();
+  const { validateMFA, mfaEmail } = useAuth();
 
   const handleVerification = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
 
     try {
-      const email = localStorage.getItem('tempEmail'); // Get email from storage
-      const response = await axios.post('/api/v1/mfa/validate', {
-        email,
-        token
+      await validateMFA(mfaEmail, token);
+      setToast({
+        message: 'Authentication successful',
+        type: 'success'
       });
-
-      if (response.data.success) {
-        // Clear temporary email
-        localStorage.removeItem('tempEmail');
-        
-        // Store user data
-        localStorage.setItem('user', JSON.stringify(response.data.data));
-        
-        if (response.data.data.usedRecoveryCode) {
-          // Show warning about recovery code usage
-          alert('Recovery code used. Please set up MFA again for security.');
-        }
-        
-        navigate('/dashboard');
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'Verification failed');
+      navigate('/dashboard');
+    } catch (error) {
+      setToast({
+        message: error.response?.data?.message || 'Verification failed',
+        type: 'error'
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
+  if (!mfaEmail) {
+    navigate('/login');
+    return null;
+  }
+
   return (
     <div className="mfa-verification-container">
       <div className="mfa-verification-box">
         <h2>{showRecoveryInput ? 'Enter Recovery Code' : 'Two-Factor Authentication'}</h2>
+        
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
         
         <form onSubmit={handleVerification}>
           {!showRecoveryInput ? (
@@ -74,8 +77,6 @@ const MFAVerification = () => {
               />
             </>
           )}
-
-          {error && <div className="error-message">{error}</div>}
 
           <button type="submit" disabled={isLoading}>
             {isLoading ? 'Verifying...' : 'Verify'}

@@ -281,7 +281,11 @@ export function AuthProvider({ children }) {
         { email, token },
         {
           withCredentials: true,
-          headers: { "Content-Type": "application/json" },
+          credentials: 'include',
+          headers: { 
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
         }
       );
 

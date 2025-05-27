@@ -631,12 +631,25 @@ exports.validateMFAToken = async (req, res) => {
       const authToken = generateToken(user);
 
       return res
-        .clearCookie("mfa_verification")
+        .clearCookie("mfa_verification", {
+          httpOnly: true,
+          secure: true,
+          sameSite: "strict",
+          domain: process.env.COOKIE_DOMAIN || undefined
+        })
+        .cookie("mfa_verification", tempToken, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "strict",
+          domain: process.env.COOKIE_DOMAIN || undefined,
+          maxAge: 5 * 60 * 1000 // 5 minutes
+        })
         .cookie("token", authToken, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
+          secure: true,
           sameSite: "strict",
-          maxAge: 7 * 24 * 60 * 60 * 1000,
+          domain: process.env.COOKIE_DOMAIN || undefined,
+          maxAge: 7 * 24 * 60 * 60 * 1000
         })
         .json({
           success: true,
@@ -669,12 +682,25 @@ exports.validateMFAToken = async (req, res) => {
     const authToken = generateToken(user);
 
     res
-      .clearCookie("mfa_verification")
+      .clearCookie("mfa_verification", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        domain: process.env.COOKIE_DOMAIN || undefined
+      })
+      .cookie("mfa_verification", tempToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        domain: process.env.COOKIE_DOMAIN || undefined,
+        maxAge: 5 * 60 * 1000 // 5 minutes
+      })
       .cookie("token", authToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: true,
         sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        domain: process.env.COOKIE_DOMAIN || undefined,
+        maxAge: 7 * 24 * 60 * 60 * 1000
       })
       .json({
         success: true,
