@@ -29,7 +29,7 @@ import { useNavigate } from "react-router-dom";
 // Ensure axios sends cookies with every request
 axios.defaults.withCredentials = true;
 
-const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const UserBookings = () => {
   const { user } = useAuth();
@@ -44,9 +44,7 @@ const UserBookings = () => {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `${API_BASE_URL}/api/v1/users/bookings`
-      );
+      const response = await axios.get(`${API_BASE_URL}/api/v1/users/bookings`);
       setBookings(response.data.data);
       setLoading(false);
     } catch (err) {
@@ -59,17 +57,18 @@ const UserBookings = () => {
   };
 
   useEffect(() => {
-    if (user && user.role === 'standard') {
+    if (user && user.role === "standard") {
       fetchBookings();
     }
   }, [user]);
 
   // Handle unauthorized access
-  if (!user || user.role !== 'standard') {
+  if (!user || user.role !== "standard") {
     return (
       <Container>
         <Alert severity="error" sx={{ mt: 2 }}>
-          Only standard users can view bookings. Please log in with a standard user account.
+          Only standard users can view bookings. Please log in with a standard
+          user account.
         </Alert>
       </Container>
     );
@@ -111,18 +110,18 @@ const UserBookings = () => {
   const handleConfirmCancel = async () => {
     if (!bookingToCancel) return;
     try {
-      await axios.delete(
-        `${API_BASE_URL}/api/v1/bookings/${bookingToCancel}`
-      );
+      await axios.delete(`${API_BASE_URL}/api/v1/bookings/${bookingToCancel}`);
       setBookings(
         bookings.filter((booking) => booking._id !== bookingToCancel)
       );
       setToast({ message: "Booking cancelled successfully.", type: "success" });
       handleCloseCancelDialog();
     } catch (err) {
-      setToast({ 
-        message: err.response?.data?.message || "Failed to cancel booking. Please try again.", 
-        type: "error" 
+      setToast({
+        message:
+          err.response?.data?.message ||
+          "Failed to cancel booking. Please try again.",
+        type: "error",
       });
       handleCloseCancelDialog();
     }
@@ -131,7 +130,11 @@ const UserBookings = () => {
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
 
       <Typography variant="h4" component="h1" gutterBottom>

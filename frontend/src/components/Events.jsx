@@ -18,7 +18,7 @@ import {
 import axios from "axios";
 import EventCard from "./events/EventCard";
 
-const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Events = () => {
   const [events, setEvents] = useState([]);

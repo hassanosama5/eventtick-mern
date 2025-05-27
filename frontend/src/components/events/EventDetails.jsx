@@ -17,7 +17,7 @@ import axios from "axios";
 import BookTicketForm from "./BookTicketForm";
 
 // Helper API URL
-const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const EventDetails = () => {
   const { id } = useParams();
@@ -42,12 +42,9 @@ const EventDetails = () => {
 
   const fetchEventDetails = async () => {
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/api/v1/events/${id}`,
-        {
-          withCredentials: true, // send cookie just in case needed by backend
-        }
-      );
+      const response = await axios.get(`${API_BASE_URL}/api/v1/events/${id}`, {
+        withCredentials: true, // send cookie just in case needed by backend
+      });
       setEvent(response.data.data);
       setLoading(false);
     } catch (err) {
@@ -109,7 +106,15 @@ const EventDetails = () => {
           <Box
             sx={{
               height: 400,
-              backgroundImage: `url(${event?.imageUrl ? `${API_BASE_URL}${event.imageUrl.startsWith('/') ? event.imageUrl : '/' + event.imageUrl}` : "/default-event.jpg"})`,
+              backgroundImage: `url(${
+                event?.imageUrl
+                  ? `${API_BASE_URL}${
+                      event.imageUrl.startsWith("/")
+                        ? event.imageUrl
+                        : "/" + event.imageUrl
+                    }`
+                  : "/default-event.jpg"
+              })`,
               backgroundSize: "cover",
               backgroundPosition: "center",
               borderRadius: 2,

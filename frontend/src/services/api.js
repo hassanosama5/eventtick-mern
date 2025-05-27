@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const API_URL = `${import.meta.env.REACT_APP_API_BASE_URL}/api/v1/events`;
-export const BACKEND_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL; // Export backend base URL
+const API_URL = `${import.meta.env.VITE_API_BASE_URL}/api/v1/events`;
+export const BACKEND_BASE_URL = import.meta.env.VITE_API_BASE_URL; // Export backend base URL
 
 // Create axios instance configured for cookie-based auth
 const api = axios.create({
@@ -54,42 +54,34 @@ export const eventService = {
    * Create new event (organizer only)
    */
   createEvent: async (formData) => {
-    try {
-      const response = await axios.post(
-        `${import.meta.env.REACT_APP_API_BASE_URL}/api/v1/events`,
-        formData,
-        {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_BASE_URL}/api/v1/events`,
+      formData,
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data;
   },
 
   /**
    * Update event (organizer/admin)
    */
   updateEvent: async (id, formData) => {
-    try {
-      const response = await axios.put(
-        `${import.meta.env.REACT_APP_API_BASE_URL}/api/v1/events/${id}`,
-        formData,
-        {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await axios.put(
+      `${import.meta.env.VITE_API_BASE_URL}/api/v1/events/${id}`,
+      formData,
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data;
   },
 
   /**

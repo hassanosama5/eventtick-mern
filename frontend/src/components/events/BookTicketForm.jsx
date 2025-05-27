@@ -17,7 +17,7 @@ import axios from "axios";
 import Toast from "../Toast";
 import Loader from "../Loader";
 
-const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const BookTicketForm = ({
   eventId,
@@ -66,7 +66,10 @@ const BookTicketForm = ({
         }
       } else {
         setError(response.data?.message || "Booking failed.");
-        setToast({ message: response.data?.message || "Booking failed.", type: "error" });
+        setToast({
+          message: response.data?.message || "Booking failed.",
+          type: "error",
+        });
       }
     } catch (err) {
       console.error(
@@ -82,7 +85,12 @@ const BookTicketForm = ({
           err.response?.data?.message ||
             "Failed to book tickets. Please try again."
         );
-        setToast({ message: err.response?.data?.message || "Failed to book tickets. Please try again.", type: "error" });
+        setToast({
+          message:
+            err.response?.data?.message ||
+            "Failed to book tickets. Please try again.",
+          type: "error",
+        });
       }
     } finally {
       setLoading(false);
@@ -188,11 +196,7 @@ const BookTicketForm = ({
             "&:disabled": { backgroundColor: "action.disabledBackground" },
           }}
         >
-          {loading ? (
-            <Loader size={24} />
-          ) : (
-            "Confirm Booking"
-          )}
+          {loading ? <Loader size={24} /> : "Confirm Booking"}
         </Button>
 
         <Typography variant="caption" display="block" textAlign="center" mt={2}>
@@ -201,7 +205,11 @@ const BookTicketForm = ({
       </Box>
 
       {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </Paper>
   );

@@ -1,16 +1,16 @@
-import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import Toast from '../Toast';
-import './AuthForms.css';
+import { useState } from "react";
+import { useAuth } from "../../context/AuthContext";
+import Toast from "../Toast";
+import "./AuthForms.css";
 
-const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function MFASetup({ onComplete }) {
   const { refreshProfile } = useAuth();
-  const [step, setStep] = useState('initial'); // initial, qr, verify
-  const [qrCode, setQrCode] = useState('');
-  const [secret, setSecret] = useState('');
-  const [verificationCode, setVerificationCode] = useState('');
+  const [step, setStep] = useState("initial"); // initial, qr, verify
+  const [qrCode, setQrCode] = useState("");
+  const [secret, setSecret] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
   const [recoveryCodes, setRecoveryCodes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState(null);
@@ -19,22 +19,22 @@ export default function MFASetup({ onComplete }) {
     setIsLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/api/v1/mfa/setup`, {
-        method: 'GET',
-        credentials: 'include',
+        method: "GET",
+        credentials: "include",
       });
       const data = await response.json();
-      
+
       if (data.success) {
         setQrCode(data.data.qrCodeUrl);
         setSecret(data.data.secret);
-        setStep('qr');
+        setStep("qr");
       } else {
-        throw new Error(data.message || 'Failed to generate QR code');
+        throw new Error(data.message || "Failed to generate QR code");
       }
     } catch (error) {
       setToast({
-        message: error.message || 'Failed to set up MFA',
-        type: 'error'
+        message: error.message || "Failed to set up MFA",
+        type: "error",
       });
     } finally {
       setIsLoading(false);
@@ -44,35 +44,35 @@ export default function MFASetup({ onComplete }) {
   const handleVerify = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/v1/mfa/verify`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify({ token: verificationCode }),
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         setRecoveryCodes(data.data.recoveryCodes);
-        setStep('recovery');
+        setStep("recovery");
         setToast({
-          message: 'MFA enabled successfully!',
-          type: 'success'
+          message: "MFA enabled successfully!",
+          type: "success",
         });
         // Refresh the user profile to update MFA status
         await refreshProfile();
       } else {
-        throw new Error(data.message || 'Invalid verification code');
+        throw new Error(data.message || "Invalid verification code");
       }
     } catch (error) {
       setToast({
-        message: error.message || 'Verification failed',
-        type: 'error'
+        message: error.message || "Verification failed",
+        type: "error",
       });
     } finally {
       setIsLoading(false);
@@ -82,7 +82,7 @@ export default function MFASetup({ onComplete }) {
   const handleComplete = async () => {
     // Ensure profile is refreshed before completing
     await refreshProfile();
-    if (typeof onComplete === 'function') {
+    if (typeof onComplete === "function") {
       onComplete();
     }
   };
@@ -97,34 +97,32 @@ export default function MFASetup({ onComplete }) {
         />
       )}
 
-      {step === 'initial' && (
+      {step === "initial" && (
         <div className="mfa-setup">
           <h2>Set Up Two-Factor Authentication</h2>
           <p>
-            Two-factor authentication adds an extra layer of security to your account.
-            When enabled, you'll need to enter a code from your authenticator app
-            in addition to your password when logging in.
+            Two-factor authentication adds an extra layer of security to your
+            account. When enabled, you'll need to enter a code from your
+            authenticator app in addition to your password when logging in.
           </p>
           <button
             onClick={handleGenerateQR}
             disabled={isLoading}
             className="submit-btn"
           >
-            {isLoading ? 'Setting up...' : 'Set up MFA'}
+            {isLoading ? "Setting up..." : "Set up MFA"}
           </button>
         </div>
       )}
 
-      {step === 'qr' && (
+      {step === "qr" && (
         <div className="mfa-setup">
           <h2>Scan QR Code</h2>
           <p>
             1. Install an authenticator app like Google Authenticator or Authy
             if you haven't already.
           </p>
-          <p>
-            2. Scan this QR code with your authenticator app:
-          </p>
+          <p>2. Scan this QR code with your authenticator app:</p>
           <div className="qr-container">
             <img src={qrCode} alt="QR Code" />
           </div>
@@ -149,23 +147,19 @@ export default function MFASetup({ onComplete }) {
                 required
               />
             </div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="submit-btn"
-            >
-              {isLoading ? 'Verifying...' : 'Verify'}
+            <button type="submit" disabled={isLoading} className="submit-btn">
+              {isLoading ? "Verifying..." : "Verify"}
             </button>
           </form>
         </div>
       )}
 
-      {step === 'recovery' && (
+      {step === "recovery" && (
         <div className="mfa-setup">
           <h2>Save Your Recovery Codes</h2>
           <p>
-            Keep these recovery codes in a safe place. If you lose access to your
-            authenticator app, you can use one of these codes to log in.
+            Keep these recovery codes in a safe place. If you lose access to
+            your authenticator app, you can use one of these codes to log in.
             Each code can only be used once.
           </p>
           <div className="recovery-codes">
@@ -176,12 +170,10 @@ export default function MFASetup({ onComplete }) {
             ))}
           </div>
           <p className="warning">
-            Warning: These codes won't be shown again. Make sure to save them now!
+            Warning: These codes won't be shown again. Make sure to save them
+            now!
           </p>
-          <button
-            onClick={handleComplete}
-            className="submit-btn"
-          >
+          <button onClick={handleComplete} className="submit-btn">
             I've saved my recovery codes
           </button>
         </div>

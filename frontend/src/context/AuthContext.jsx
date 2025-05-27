@@ -21,7 +21,7 @@ const initialState = {
   mfaEmail: null,
 };
 
-const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function reducer(state, action) {
   switch (action.type) {
@@ -39,12 +39,12 @@ function reducer(state, action) {
         error: null,
       };
     case "AUTH_FAILURE":
-      return { 
-        ...state, 
+      return {
+        ...state,
         user: null,
         isAuthenticated: false,
-        error: action.payload, 
-        isLoading: false 
+        error: action.payload,
+        isLoading: false,
       };
     case "LOGOUT":
       return { ...initialState, isLoading: false };
@@ -77,14 +77,11 @@ export function AuthProvider({ children }) {
   const refreshProfile = useCallback(async () => {
     try {
       dispatch({ type: "REFRESH_START" });
-      const response = await axios.get(
-        `${API_BASE_URL}/api/v1/users/profile`,
-        {
-          withCredentials: true,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-      
+      const response = await axios.get(`${API_BASE_URL}/api/v1/users/profile`, {
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
+      });
+
       if (response.data.success) {
         dispatch({ type: "AUTH_SUCCESS", payload: response.data.data });
       } else {
@@ -92,9 +89,9 @@ export function AuthProvider({ children }) {
       }
     } catch (error) {
       console.error("Profile refresh error:", error);
-      dispatch({ 
-        type: "AUTH_FAILURE", 
-        payload: error.response?.data?.message || "Failed to refresh profile" 
+      dispatch({
+        type: "AUTH_FAILURE",
+        payload: error.response?.data?.message || "Failed to refresh profile",
       });
     }
   }, [dispatch]);
@@ -110,7 +107,7 @@ export function AuthProvider({ children }) {
             headers: { "Content-Type": "application/json" },
           }
         );
-        
+
         if (response.data.success) {
           dispatch({ type: "AUTH_SUCCESS", payload: response.data.data });
         } else {
@@ -118,10 +115,11 @@ export function AuthProvider({ children }) {
         }
       } catch (error) {
         console.error("Profile fetch error:", error);
-        document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        dispatch({ 
-          type: "AUTH_FAILURE", 
-          payload: error.response?.data?.message || "Failed to fetch profile" 
+        document.cookie =
+          "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        dispatch({
+          type: "AUTH_FAILURE",
+          payload: error.response?.data?.message || "Failed to fetch profile",
         });
       }
     };
@@ -139,7 +137,7 @@ export function AuthProvider({ children }) {
           headers: { "Content-Type": "application/json" },
         }
       );
-      
+
       if (response.data.success) {
         dispatch({ type: "AUTH_SUCCESS", payload: response.data.data });
       } else {
@@ -206,10 +204,10 @@ export function AuthProvider({ children }) {
 
   const verifyOTP = async (email, otp) => {
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}/api/v1/verify-otp`,
-        { email, otp }
-      );
+      const response = await axios.post(`${API_BASE_URL}/api/v1/verify-otp`, {
+        email,
+        otp,
+      });
       setTempToken(response.data.token);
       return true;
     } catch (err) {
@@ -265,11 +263,13 @@ export function AuthProvider({ children }) {
         }
       );
       dispatch({ type: "LOGOUT" });
-      document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie =
+        "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       navigate("/login");
     } catch (err) {
       dispatch({ type: "LOGOUT" });
-      document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie =
+        "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       navigate("/login");
     }
   };

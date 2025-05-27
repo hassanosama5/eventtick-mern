@@ -4,9 +4,16 @@ import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 import "./EventList.css";
 import EventCard from "../events/EventCard";
-import { Button, ButtonGroup, TextField, MenuItem, Box, Grid } from "@mui/material";
+import {
+  Button,
+  ButtonGroup,
+  TextField,
+  MenuItem,
+  Box,
+  Grid,
+} from "@mui/material";
 
-const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const OrganizerEventList = () => {
   const navigate = useNavigate();
@@ -25,7 +32,7 @@ const OrganizerEventList = () => {
     "concert",
     "exhibition",
     "other",
-    "sports"
+    "sports",
   ];
 
   // Filter events by search and category
@@ -49,7 +56,7 @@ const OrganizerEventList = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `${API_BASE_URL}/api/v1/events/organizer`, 
+          `${API_BASE_URL}/api/v1/events/organizer`,
           { withCredentials: true }
         );
 
@@ -139,20 +146,31 @@ const OrganizerEventList = () => {
               </Grid>
             </Grid>
           </Box>
-          <div style={{ padding: '16px 0' }}>
-            <div style={{ width: '100%' }}>
-              <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <div style={{ width: '100%' }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, justifyContent: 'center' }}>
+          <div style={{ padding: "16px 0" }}>
+            <div style={{ width: "100%" }}>
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <div style={{ width: "100%" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 24,
+                      justifyContent: "center",
+                    }}
+                  >
                     {paginatedEvents.map((event) => (
                       <EventCard
                         key={event._id}
                         event={event}
                         viewMode="grid"
                         showOrganizerActions={true}
-                        onEdit={() => navigate(`/organizer/events/edit/${event._id}`)}
+                        onEdit={() =>
+                          navigate(`/organizer/events/edit/${event._id}`)
+                        }
                         onDelete={() => handleDelete(event._id)}
-                        onAnalytics={() => navigate(`/organizer/events/${event._id}/analytics`)}
+                        onAnalytics={() =>
+                          navigate(`/organizer/events/${event._id}/analytics`)
+                        }
                         onView={() => navigate(`/events/${event._id}`)}
                       />
                     ))}
@@ -162,10 +180,18 @@ const OrganizerEventList = () => {
             </div>
           </div>
           {filteredEvents.length > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                marginTop: 32,
+              }}
+            >
               <ButtonGroup variant="outlined">
                 <Button
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
                   disabled={currentPage === 1}
                 >
                   Previous
@@ -180,7 +206,9 @@ const OrganizerEventList = () => {
                   </Button>
                 ))}
                 <Button
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
                   disabled={currentPage === totalPages}
                 >
                   Next

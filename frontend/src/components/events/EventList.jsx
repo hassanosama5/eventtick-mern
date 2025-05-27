@@ -25,7 +25,7 @@ import getDay from "date-fns/getDay";
 import enUS from "date-fns/locale/en-US";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
-const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const locales = { "en-US": enUS };
 const localizer = dateFnsLocalizer({
@@ -200,18 +200,18 @@ const EventList = ({ events: initialEvents }) => {
               placeholder="Search events"
               InputLabelProps={{ shrink: true }}
               sx={{
-                '& .MuiInputBase-input': {
-                  fontFamily: 'inherit',
-                  fontSize: '1rem',
+                "& .MuiInputBase-input": {
+                  fontFamily: "inherit",
+                  fontSize: "1rem",
                   fontWeight: 400,
-                  fontStyle: 'normal',
-                  color: 'rgba(0,0,0,0.87)',
+                  fontStyle: "normal",
+                  color: "rgba(0,0,0,0.87)",
                 },
-                '& .MuiInputBase-input::placeholder': {
-                  fontStyle: 'normal',
-                  color: 'rgba(0,0,0,0.87)',
+                "& .MuiInputBase-input::placeholder": {
+                  fontStyle: "normal",
+                  color: "rgba(0,0,0,0.87)",
                   opacity: 1,
-                }
+                },
               }}
             />
           </Grid>
@@ -223,17 +223,28 @@ const EventList = ({ events: initialEvents }) => {
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
               variant="outlined"
-              sx={{ minWidth: 180, height: '56px', '& .MuiInputBase-root': { height: '56px', alignItems: 'center' } }}
+              sx={{
+                minWidth: 180,
+                height: "56px",
+                "& .MuiInputBase-root": {
+                  height: "56px",
+                  alignItems: "center",
+                },
+              }}
               SelectProps={{ displayEmpty: true }}
             >
               <MenuItem value="none" disabled>
-                <span style={{
-                  fontStyle: 'normal',
-                  color: 'rgba(0,0,0,0.87)',
-                  fontSize: '1rem',
-                  fontFamily: 'inherit',
-                  fontWeight: 400
-                }}>Choose a category</span>
+                <span
+                  style={{
+                    fontStyle: "normal",
+                    color: "rgba(0,0,0,0.87)",
+                    fontSize: "1rem",
+                    fontFamily: "inherit",
+                    fontWeight: 400,
+                  }}
+                >
+                  Choose a category
+                </span>
               </MenuItem>
               <MenuItem value="all">All Categories</MenuItem>
               {categories.map((category) => (
@@ -272,7 +283,12 @@ const EventList = ({ events: initialEvents }) => {
               />
             </Box>
           ) : (
-            <Grid container spacing={3} justifyContent="center" alignItems="stretch">
+            <Grid
+              container
+              spacing={3}
+              justifyContent="center"
+              alignItems="stretch"
+            >
               {paginatedEvents.map((event) => (
                 <Grid
                   item
@@ -280,9 +296,13 @@ const EventList = ({ events: initialEvents }) => {
                   xs={12}
                   sm={6}
                   md={4}
-                  style={{ display: 'flex', justifyContent: 'center' }}
+                  style={{ display: "flex", justifyContent: "center" }}
                 >
-                  <EventCard event={event} viewMode={viewMode} showStatusChip={false} />
+                  <EventCard
+                    event={event}
+                    viewMode={viewMode}
+                    showStatusChip={false}
+                  />
                 </Grid>
               ))}
             </Grid>
@@ -309,7 +329,9 @@ const EventList = ({ events: initialEvents }) => {
               </Button>
             ))}
             <Button
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
               disabled={currentPage === totalPages}
             >
               Next
