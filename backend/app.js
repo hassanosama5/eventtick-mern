@@ -7,18 +7,6 @@ const cookieParser = require("cookie-parser");
 // Environment variables
 dotenv.config();
 
-// Database connection
-const dbUrl =
-  process.env.MONGODB_URI ||
-  "mongodb://localhost:27017/online-event-ticketing-system";
-mongoose
-  .connect(dbUrl, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("MongoDB connection error:", err));
-
 const app = express();
 
 // Middleware
@@ -38,7 +26,7 @@ app.use(
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from the 'uploads' directory
-app.use('/uploads', express.static('uploads'));
+app.use("/uploads", express.static("uploads"));
 
 // // Request logging middleware
 // app.use((req, res, next) => {
