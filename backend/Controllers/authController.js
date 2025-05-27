@@ -246,7 +246,7 @@ exports.login = async (req, res) => {
         expiresIn: "5m",
       });
 
-      res
+      return res
         .cookie("mfa_verification", tempToken, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
