@@ -3,5 +3,5 @@
 /backend/node_modules
 
 # Frontend
-/frontend/.env.local
+/frontend/.env
 /frontend/node_modules
