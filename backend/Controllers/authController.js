@@ -252,7 +252,7 @@ exports.login = async (req, res) => {
           secure: process.env.NODE_ENV === "production",
           sameSite: "lax",
         })
-        .cookie("token", authToken, {
+        .cookie("token", tempToken, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           sameSite: "lax",
