@@ -25,7 +25,7 @@
   "description": "Software Project\r This is Task 1 for creating mongodb database user schemas and booking and events",
   "main": "app.js",
   "scripts": {
-    "start": "nodemon server.js",
+    "start": "node server.js",
     "dev": "nodemon server.js"
   },
   "repository": {
